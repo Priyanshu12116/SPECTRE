@@ -1,4 +1,4 @@
-# SPECTRE: Stealthy Polymorphic Evasion & Countermeasure Toolkit for Resilient Executables
+# SPECTRE: System for Procedural Evasion, Camouflage, and Threat Response
 
 ## Overview
 
