@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPECTRE Obfuscator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script>
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <canvas id="matrix-bg"></canvas>
+    <div class="container">
+        <header>
+            <h1><img src="spectrelogo.jpg" alt="SPECTRE Logo" class="logo-image"> SPECTRE</h1>
+            <p>Stealthy Polymorphic Evasion & Countermeasure Toolkit for Resilient Executables</p>
+        </header>
+
+        <main>
+            <div class="card dashboard">
+                <h2>Dashboard</h2>
+                <div class="stats">
+                    <div class="stat-item">
+                        <h3>Files Obfuscated</h3>
+                        <p>1,245</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>Success Rate</h3>
+                        <p>99.8%</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>Last Run</h3>
+                        <p>2025-10-05 10:30 AM</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card file-upload">
+                <h2>Upload Source Files</h2>
+                <div class="drop-zone">
+                    <span class="drop-zone-icon">📤</span>
+                    <p>Drag & drop files here or click to browse</p>
+                    <input type="file" id="fileInput" multiple>
+                </div>
+                <div id="file-list"></div>
+            </div>
+
+            <div class="card obfuscation-parameters">
+                <h2>Obfuscation Parameters</h2>
+                <div class="param-grid">
+                    <div class="param-item">
+                        <label for="obfuscation-level">Obfuscation Level</label>
+                        <input type="range" id="obfuscation-level" name="obfuscation-level" min="1" max="10" value="5">
+                    </div>
+                    <div class="param-item">
+                        <label for="target-platform">Target Platform</label>
+                        <select id="target-platform" name="target-platform">
+                            <option value="windows">Windows</option>
+                            <option value="linux">Linux</option>
+                        </select>
+                    </div>
+                    <div class="param-item full-width">
+                        <label>Obfuscation Methods</label>
+                        <div class="toggles">
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="code-virtualization" checked>
+                                <label for="code-virtualization">Code Virtualization</label>
+                            </div>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="control-flow-flattening" checked>
+                                <label for="control-flow-flattening">Control Flow Flattening</label>
+                            </div>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="string-encryption">
+                                <label for="string-encryption">String Encryption</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card process-control">
+                <h2>Process Control</h2>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="controls">
+                    <button id="startBtn">Start Obfuscation</button>
+                    <button id="cancelBtn" disabled>Cancel</button>
+                </div>
+            </div>
+
+            <div class="card report-generation">
+                <h2>Reports & Logs</h2>
+                <div id="log-output">
+                    <p class="log-entry info">[INFO] Welcome to SPECTRE. Ready to obfuscate.</p>
+                </div>
+                <div class="report-actions">
+                    <button>Download Report (PDF)</button>
+                    <button>Download Logs (HTML)</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 SPECTRE Obfuscator. All Rights Reserved.</p>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

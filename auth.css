@@ -1,0 +1,222 @@
+/* --- VARIABLES & FONTS (Adjust as needed for your login page) --- */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+:root {
+    --primary-bg-color: #0D0D1A;
+    --secondary-bg-color: #161629;
+    --accent-color-blue: #00A3FF;
+    --accent-color-glow: rgba(0, 163, 255, 0.5);
+    --text-color-primary: #FFFFFF;
+    --text-color-secondary: #A0A0C0;
+    --border-color: #2A2A4A;
+    --lock-color: #00A3FF; /* Matches your image's glow color */
+    --lock-body-color: #161629; /* Darker to show glow */
+    --lock-border: #00A3FF;
+}
+
+/* --- GLOBAL STYLES --- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--primary-bg-color);
+    color: var(--text-color-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    overflow: hidden; /* Prevent scrollbars from animations */
+}
+
+/* --- LOGIN CONTAINER --- */
+.login-container {
+    background-color: var(--secondary-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    max-width: 450px;
+    width: 100%;
+    box-shadow: 0 0 30px rgba(0, 163, 255, 0.1);
+    position: relative;
+    overflow: hidden; /* Ensure lock graphic stays within bounds */
+}
+
+.login-container h1 {
+    font-size: 2.2rem;
+    margin-bottom: 15px;
+    color: var(--text-color-primary);
+}
+
+.login-container p {
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+    margin-bottom: 30px;
+}
+
+/* --- FORM STYLES --- */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+input {
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--primary-bg-color);
+    color: var(--text-color-primary);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input:focus {
+    border-color: var(--accent-color-blue);
+    box-shadow: 0 0 10px rgba(0, 163, 255, 0.3);
+}
+
+button {
+    padding: 12px 25px;
+    background-color: var(--accent-color-blue);
+    color: var(--primary-bg-color);
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px var(--accent-color-glow);
+}
+
+button:hover {
+    background-color: transparent;
+    color: var(--accent-color-blue);
+    border: 1px solid var(--accent-color-blue);
+    box-shadow: 0 0 20px var(--accent-color-glow);
+}
+
+.message {
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+    min-height: 24px; /* Prevent layout shift */
+}
+
+.message.success { color: #4CAF50; } /* Green for success */
+.message.error { color: #F44336; }   /* Red for error */
+
+/* --- LOCK GRAPHIC STYLES --- */
+.lock-graphic {
+    width: 120px;
+    height: 120px;
+    margin: -70px auto 30px auto; /* Position above the container */
+    position: relative;
+    /* Use filters for glow effect */
+    filter: drop-shadow(0 0 15px var(--lock-color)) drop-shadow(0 0 30px var(--accent-color-glow));
+}
+
+.lock-body {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background-color: var(--lock-body-color);
+    border: 2px solid var(--lock-border);
+    border-radius: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    z-index: 2;
+    overflow: hidden; /* for the keyhole effect */
+}
+
+.lock-body::before { /* Keyhole */
+    content: '';
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background-color: var(--lock-color);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+    z-index: 3;
+}
+.lock-body::after { /* Keyhole slot */
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 12px;
+    background-color: var(--lock-color);
+    top: 60%;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg); /* angled slot */
+    border-radius: 0 0 2px 2px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+    z-index: 3;
+}
+
+
+.lock-shackle {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border: 2px solid var(--lock-border);
+    border-bottom: none;
+    border-radius: 40px 40px 0 0;
+    left: 50%;
+    transform: translateX(-50%) rotate(0deg);
+    top: 0;
+    z-index: 1;
+    transform-origin: 50% 100%; /* Rotate from the bottom center */
+    transition: transform 0.5s ease-in-out; /* Smooth shackle movement */
+    box-shadow: inset 0 0 10px rgba(0, 163, 255, 0.2);
+}
+
+/* --- ANIMATIONS FOR LOCK STATES --- */
+
+/* Initial state (locked) - shackle is down */
+.lock-graphic {
+    transform: scale(1);
+    transition: transform 0.3s ease;
+}
+
+/* "Lock Out" (Closing) animation - triggered when login fails */
+.lock-graphic.locked .lock-shackle {
+    transform: translateX(-50%) rotate(0deg);
+}
+.lock-graphic.locked {
+    animation: lockShake 0.4s ease-in-out;
+}
+
+/* "Lock In" (Opening) animation - triggered on successful login */
+.lock-graphic.unlocked .lock-shackle {
+    transform: translateX(-50%) rotate(-45deg); /* Open shackle */
+}
+
+/* Keyhole animation on unlock */
+.lock-graphic.unlocked .lock-body::before,
+.lock-graphic.unlocked .lock-body::after {
+    background-color: var(--accent-color-blue); /* Brighter glow */
+    box-shadow: 0 0 10px var(--accent-color-glow);
+}
+
+
+/* Keyframe for a small shake when locking out (failed login) */
+@keyframes lockShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Optional: Subtle pulse for the keyhole to indicate readiness */
+@keyframes keyholePulse {
+    0%, 100% { box-shadow: 0 0 5px var(--accent-color-glow); }
+    50% { box-shadow: 0 0 15px var(--accent-color-blue); }
+}
+
+.lock-body::before, .lock-body::after {
+    animation: keyholePulse 2s infinite alternate ease-in-out;
+}
