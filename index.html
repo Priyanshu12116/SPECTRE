@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPECTRE - Advanced Code Obfuscator</title>
+    <title>SPECTRE OBFUSCATOR</title>
+    <link rel="icon" href="spectrelogo.jpg" type="image/jpeg">
     <link rel="stylesheet" href="style-home.css">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
     <div class="background-pattern"></div>
@@ -22,35 +24,135 @@
                 <a href="#features">Features</a>
             </div>
             <div class="nav-user">
-                <a href="app.html" class="cta-button nav-cta">Launch App</a>
+                <a href="app.html" class="cta-button nav-cta">Login</a>
             </div>
         </div>
     </nav>
 
     <main>
+        <!-- HERO SECTION -->
         <section class="hero">
             <div class="hero-content">
-                <h1 class="hero-title">Protect Your Code's DNA</h1>
-                <p class="hero-subtitle">Harness the power of LLVM to transform your software into a fortress, making reverse-engineering a futile endeavor.</p>
+                <div class="hero-badge">SPECTRE</div>
+                <h1 class="hero-title"><span class="gradient-text">Intelligent Code</span> Obfuscation Platform</h1>
+                <p class="hero-subtitle">Advanced LLVM-based obfuscation system combining AI-driven optimization, runtime encryption, password-protected vaults, and security vulnerability analysis.</p>
                 <div class="hero-buttons">
-                    <a href="app.html" class="cta-button">Start Obfuscating</a>
-                    <a href="#features" class="cta-button secondary">Learn More</a>
+                    <a href="app.html" class="cta-button">Start Obfuscating <i data-lucide="arrow-right"></i></a>
+                    <a href="#features" class="cta-button secondary">Explore Features</a>
                 </div>
             </div>
             <div class="hero-graphic" id="globe-container">
-                </div>
+                <!-- 3D Globe Renders Here -->
+            </div>
         </section>
 
+        <!-- STATS SECTION -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i data-lucide="shield"></i>
+                    <h3>14+</h3>
+                    <p>Protection Techniques</p>
+                </div>
+                <div class="stat-card">
+                    <i data-lucide="cpu"></i>
+                    <h3>2</h3>
+                    <p>Platform Support</p>
+                </div>
+                <div class="stat-card">
+                    <i data-lucide="file-code"></i>
+                    <h3>C/C++</h3>
+                    <p>Languages Supported</p>
+                </div>
+                <div class="stat-card">
+                    <i data-lucide="lock"></i>
+                    <h3>6</h3>
+                    <p>Security Layers</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROBLEM STATEMENT SECTION -->
+        <section class="problem-section">
+            <div class="problem-content">
+                <div class="problem-text">
+                    <div class="hero-badge purple">
+                        <i data-lucide="code"></i> The Challenge
+                    </div>
+                    <h2>Protecting Software in the Age of <span>Reverse Engineering</span></h2>
+                    <p>Modern software faces constant threats from reverse engineering, piracy, and intellectual property theft. Traditional protection methods are no longer sufficient against sophisticated attackers with advanced debugging and analysis tools.</p>
+                    <ul>
+                        <li><i data-lucide="check-circle"></i>Prevent unauthorized code analysis</li>
+                        <li><i data-lucide="check-circle"></i>Protect proprietary algorithms</li>
+                        <li><i data-lucide="check-circle"></i>Mitigate software piracy</li>
+                        <li><i data-lucide="check-circle"></i>Maintain competitive advantage</li>
+                    </ul>
+                </div>
+                <div class="problem-card">
+                    <div class="solution-header">
+                        <div class="solution-icon"><i data-lucide="shield"></i></div>
+                        <div>
+                            <h3>Our Solution</h3>
+                            <p>A comprehensive LLVM-based obfuscation platform that combines multiple protection layers with intelligent optimization.</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="solution-details">
+                        <div><span>Code Protection</span><strong class="cyan">Maximum</strong></div>
+                        <div><span>Performance Impact</span><strong class="green">Optimized</strong></div>
+                        <div><span>Platform Support</span><strong class="purple">Windows & Linux</strong></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURES SECTION -->
         <section id="features" class="features-section">
             <div class="features-intro">
-                <h2>A New Paradigm in Software Protection</h2>
-                <p>SPECTRE goes beyond simple obfuscation, creating layers of deceptive and complex defenses.</p>
+                <h2>Six Revolutionary <span class="gradient-text">Protection Layers</span></h2>
+                <p>Comprehensive defense-in-depth approach that makes reverse engineering virtually impossible.</p>
             </div>
             <div class="features-grid">
-                <div class="feature-card"><h3>IP Protection</h3><p>Convert your proprietary algorithms into a complex, unreadable format that is computationally expensive to analyze.</p><a href="#">Explore Feature &rarr;</a></div>
-                <div class="feature-card"><h3>Anti-Reverse Engineering</h3><p>Actively mislead and frustrate analysts with decoy code paths and control flow flattening, making manual analysis impossible.</p><a href="#">Explore Feature &rarr;</a></div>
-                <div class="feature-card"><h3>Tamper Resistance</h3><p>Deter unauthorized modifications and cracks by implementing integrity checks and anti-debugging techniques.</p><a href="#">Explore Feature &rarr;</a></div>
+                <div class="feature-card group">
+                    <div class="feature-icon icon-cyan"><i data-lucide="brain"></i></div>
+                    <h3>AI-Driven Smart Obfuscation</h3>
+                    <p>Performance-aware obfuscation that intelligently balances security and speed.</p>
+                </div>
+                <div class="feature-card group">
+                    <div class="feature-icon icon-purple"><i data-lucide="eye"></i></div>
+                    <h3>Anti-Analysis Protection</h3>
+                    <p>Detects and counters debuggers, VMs, and sandbox environments.</p>
+                </div>
+                <div class="feature-card group">
+                    <div class="feature-icon icon-green"><i data-lucide="clock"></i></div>
+                    <h3>Runtime Deobfuscation</h3>
+                    <p>Functions stay encrypted until execution, defeating static analysis.</p>
+                </div>
+                <div class="feature-card group">
+                    <div class="feature-icon icon-orange"><i data-lucide="database"></i></div>
+                    <h3>Data Structure Scrambling</h3>
+                    <p>Transforms organized data into unrecognizable byte patterns.</p>
+                </div>
+                <!-- NEW CARD -->
+                <div class="feature-card group">
+                    <div class="feature-icon icon-pink"><i data-lucide="lock"></i></div>
+                    <h3>Password-Protected Code Vault</h3>
+                    <p>Critical functions locked with AES encryption, unlocked only with correct password.</p>
+                </div>
+                <!-- NEW CARD -->
+                <div class="feature-card group">
+                    <div class="feature-icon icon-yellow"><i data-lucide="shield"></i></div>
+                    <h3>Security Scorecard Analyzer</h3>
+                    <p>Pre-obfuscation vulnerability analysis with actionable security recommendations.</p>
+                </div>
             </div>
+        </section>
+
+        <!-- FINAL CTA SECTION -->
+        <section class="cta-section">
+            <h2>Ready to Protect Your Code?</h2>
+            <p>Upload your C/C++ source files and let our intelligent obfuscation engine create bulletproof protection in minutes.</p>
+            <a href="app.html" class="cta-button">Try Demo Now <i data-lucide="zap"></i></a>
         </section>
     </main>
 
@@ -61,5 +163,8 @@
     </footer>
     
     <script src="home.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>

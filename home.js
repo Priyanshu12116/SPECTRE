@@ -61,14 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
             setupInteractivityAndAnimation(container, globe, atmosphere, scene, camera, renderer);
         }
 
-        /**
-         * Creates a dense, high-resolution binary texture from a local image.
-         */
         function createGlobeTextureFromImage(imageUrl) {
             return new Promise((resolve) => {
                 const image = new Image();
                 image.src = imageUrl;
-
                 image.onload = () => {
                     const mapCanvas = document.createElement('canvas');
                     mapCanvas.width = image.width;
@@ -76,24 +72,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     const mapContext = mapCanvas.getContext('2d');
                     mapContext.drawImage(image, 0, 0);
                     const mapData = mapContext.getImageData(0, 0, mapCanvas.width, mapCanvas.height);
-
                     const textureCanvas = document.createElement('canvas');
                     textureCanvas.width = 4096;
                     textureCanvas.height = 2048;
                     const textureContext = textureCanvas.getContext('2d');
                     const scaleX = textureCanvas.width / mapCanvas.width;
                     const scaleY = textureCanvas.height / mapCanvas.height;
-
                     textureContext.fillStyle = '#0D0D1A';
                     textureContext.fillRect(0, 0, textureCanvas.width, textureCanvas.height);
-                    
                     textureContext.font = '10px monospace';
-
                     for (let y = 0; y < mapCanvas.height; y += 2) {
                         for (let x = 0; x < mapCanvas.width; x += 2) {
                             const i = (y * mapCanvas.width + x) * 4;
                             const r = mapData.data[i];
-
                             if (r < 50) {
                                 textureContext.fillStyle = '#00A3FF';
                                 textureContext.fillText(Math.random() > 0.5 ? '1' : '0', x * scaleX, y * scaleY);
@@ -102,16 +93,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     resolve(new THREE.CanvasTexture(textureCanvas));
                 };
-
                 image.onerror = () => {
                     console.error("Failed to load the local map image. Make sure 'worldmap.jpg' is in the same folder as index.html.");
                 };
             });
         }
 
-        /**
-         * Sets up mouse controls, responsiveness, and the animation loop for the globe.
-         */
         function setupInteractivityAndAnimation(container, globe, atmosphere, scene, camera, renderer) {
             let isMouseDown = false;
             let previousMousePosition = { x: 0, y: 0 };
@@ -164,38 +151,35 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.style.setProperty('--mouse-inv-y', `${inverseY}px`);
     });
 
-    // --- MODIFIED SCROLL ANIMATION LOGIC ---
+    // --- Scroll Animation Logic ---
     const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
             if (entry.isIntersecting) {
-                // When the element is in view, add the 'visible' class
                 entry.target.classList.add('visible');
             } else {
-                // When the element is out of view, remove the 'visible' class to reset it
                 entry.target.classList.remove('visible');
             }
         });
     }, {
-        threshold: 0.2
+        threshold: 0.1
     });
 
-    const elementsToAnimate = document.querySelectorAll('.features-intro, .feature-card');
+    // UPDATED: Added all new sections to the animation observer
+    const elementsToAnimate = document.querySelectorAll('.stats-card, .problem-section, .features-intro, .feature-card, .cta-section');
     elementsToAnimate.forEach((el) => observer.observe(el));
+    
     // --- Navbar Hide/Show on Scroll Logic ---
-let lastScrollTop = 0;
-const navbar = document.querySelector('nav');
+    let lastScrollTop = 0;
+    const navbar = document.querySelector('nav');
 
-window.addEventListener('scroll', () => {
-    // Get the current scroll position
-    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    window.addEventListener('scroll', () => {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-    if (scrollTop > lastScrollTop) {
-        // Scrolling Down: Hide the navbar
-        navbar.classList.add('nav-hidden');
-    } else {
-        // Scrolling Up: Show the navbar
-        navbar.classList.remove('nav-hidden');
-    }
-    // Update the last scroll position
-    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;});
+        if (scrollTop > lastScrollTop && scrollTop > 100) { // Add threshold
+            navbar.classList.add('nav-hidden');
+        } else {
+            navbar.classList.remove('nav-hidden');
+        }
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    });
 });
