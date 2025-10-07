@@ -40,7 +40,23 @@ nav { padding: 1.5rem 5%; position: sticky; top: 0; z-index: 100; background-col
 .cta-button.secondary { background: transparent; color: var(--text-color-primary); border: 1px solid var(--border-color); box-shadow: none; }
 .cta-button.secondary:hover { background: var(--secondary-bg-color); border-color: var(--text-color-primary); }
 .nav-cta { padding: 0.5rem 1rem; font-size: 0.9rem; }
-
+/* NEW: Styles for the Logout button */
+.logout-btn {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-color-secondary);
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.logout-btn:hover {
+    background-color: var(--secondary-bg-color);
+    border-color: var(--text-color-secondary);
+    color: var(--text-color-primary);
+}
 /* --- GRADIENT TEXT --- */
 .gradient-text { background-image: linear-gradient(to right, var(--accent-color-blue), #a78bfa); -webkit-background-clip: text; background-clip: text; color: transparent; }
 

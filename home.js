@@ -1,4 +1,38 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- NEW: Dynamic Login/Logout Button Logic ---
+    const authContainer = document.getElementById('nav-auth-container');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+    if (authContainer) {
+        if (isLoggedIn) {
+            // If logged in, show Logout button
+            authContainer.innerHTML = '<button id="logout-btn" class="logout-btn">Logout</button>';
+            const logoutBtn = document.getElementById('logout-btn');
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('username');
+                window.location.href = 'index.html'; // Redirect to home
+            });
+        } else {
+            // If not logged in, show Login/Sign Up button
+            authContainer.innerHTML = '<a href="login.html" class="cta-button nav-cta">Login / Sign Up</a>';
+        }
+    }
+
+       // --- NEW: Protected Route Logic ---
+    const toolLink = document.getElementById('tool-link');
+    if (toolLink) {
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        if (!isLoggedIn) {
+            // If user is not logged in, change the link's behavior
+            toolLink.addEventListener('click', (e) => {
+                e.preventDefault(); // Stop the link from going to app.html
+                window.location.href = 'login.html'; // Redirect to the login page
+            });
+        }
+        // If the user is logged in, the link works as normal (href="app.html")
+    }
+
     // --- Globe animation logic ---
     const container = document.getElementById('globe-container');
     // UPDATED: Check if the globe container exists before running globe-specific code
