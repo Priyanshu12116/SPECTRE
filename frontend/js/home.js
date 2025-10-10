@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
         camera.position.z = 2.5;
-        const globeTexture = await createGlobeTextureFromImage('worldmap.jpg');
+        const globeTexture = await createGlobeTextureFromImage('../../assets/images/worldmap.jpg');
         const geometry = new THREE.SphereGeometry(1.5, 64, 64);
         const material = new THREE.MeshStandardMaterial({ map: globeTexture });
         globe = new THREE.Mesh(geometry, material);
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 resolve(new THREE.CanvasTexture(textureCanvas));
             };
-            image.onerror = () => { console.error("Failed to load the local map image. Make sure 'worldmap.jpg' is in the same folder as index.html."); };
+            image.onerror = () => { console.error("Failed to load the local map image. Make sure 'worldmap.jpg' is in assets/images/ folder."); };
         });
     }
 

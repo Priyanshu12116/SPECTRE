@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
-        container.appendChild(renderer.domElement);
         const ambientLight = new THREE.AmbientLight(0x00e5e5, 0.5);
         scene.add(ambientLight);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -21,13 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
         scene.add(directionalLight);
         const textureLoader = new THREE.TextureLoader();
         const shieldTexture = textureLoader.load(
-            'shield.png',
+            '../../assets/images/shield.png',
             () => {
                 const shieldMaterial = new THREE.ShaderMaterial({
                     uniforms: { shieldTexture: { value: shieldTexture } },
                     vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
                     fragmentShader: `uniform sampler2D shieldTexture; varying vec2 vUv; void main() { vec4 texColor = texture2D(shieldTexture, vUv); if (texColor.r > 0.8 && texColor.g > 0.8 && texColor.b > 0.8) { discard; } if (texColor.r > 0.6 && texColor.g < 0.4 && texColor.b < 0.4) { gl_FragColor = vec4(0.1, 0.7, 1.0, 1.0) * (texColor.r * 2.5); } else { gl_FragColor = texColor; } }`,
-                    transparent: true
                 });
                 const shieldGeometry = new THREE.PlaneGeometry(5, 5.5);
                 shieldPlane = new THREE.Mesh(shieldGeometry, shieldMaterial);
