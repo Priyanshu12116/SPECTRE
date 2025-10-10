@@ -15,42 +15,44 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- MATRIX RAIN BACKGROUND ANIMATION ---
+    // --- MATRIX RAIN BACKGROUND ANIMATION (Optional - only if canvas exists) ---
     const canvas = document.getElementById('matrix-bg');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const alphabet = '01';
-    const fontSize = 12;
-    const columns = canvas.width / fontSize;
-    const rainDrops = Array.from({ length: columns }).fill(1);
-
-    function draw() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#0a7a2cff';
-        ctx.font = fontSize + 'px monospace';
-        for (let i = 0; i < rainDrops.length; i++) {
-            const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
-            ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
-            if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                rainDrops[i] = 0;
-            }
-            rainDrops[i]++;
-        }
-    }
-    setInterval(draw, 30);
-    window.addEventListener('resize', () => {
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-    });
+        const alphabet = '01';
+        const fontSize = 12;
+        const columns = canvas.width / fontSize;
+        const rainDrops = Array.from({ length: columns }).fill(1);
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0a7a2cff';
+            ctx.font = fontSize + 'px monospace';
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        }
+        setInterval(draw, 30);
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    }
 
     // --- APPLICATION ELEMENT SELECTIONS ---
     const dropZone = document.querySelector('.drop-zone');
     const fileInput = document.getElementById('fileInput');
     const fileList = document.getElementById('file-list');
     const startBtn = document.getElementById('startBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
+    const cancelBtn = document.getElementById('cancelBtn'); // Optional - may not exist in new design
     const progressBar = document.getElementById('progressBar');
     const logOutput = document.getElementById('log-output');
     let uploadedFiles = [];
@@ -100,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function startObfuscation() {
         startBtn.disabled = true;
-        cancelBtn.disabled = false;
+        if (cancelBtn) cancelBtn.disabled = false;
         progressBar.style.width = '0%';
         if(logOutput) logOutput.innerHTML = '';
         
@@ -451,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function finishProcess() {
         startBtn.disabled = false;
-        cancelBtn.disabled = true;
+        if (cancelBtn) cancelBtn.disabled = true;
     }
 
     function addLog(message, type) {

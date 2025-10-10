@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPECTRE TOOLS</title>
+    <title>SPECTRE Obfuscator - Tool</title>
+    <link rel="stylesheet" href="../css/style-home.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="icon" href="../../assets/images/spectrelogo.jpg" type="image/jpeg">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
     <script>
@@ -13,65 +15,89 @@
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('username', 'Demo User');
     </script>
-    <canvas id="matrix-bg"></canvas>
-    <div class="container">
-        <header>
-            <h1><img src="../../assets/images/spectrelogo.jpg" alt="SPECTRE Logo" class="logo-image"> SPECTRE</h1>
-            <p>Stealthy Polymorphic Evasion & Countermeasure Toolkit for Resilient Executables</p>
-        </header>
+    
+    <!-- Background Pattern (matching home page) -->
+    <div class="background-pattern"></div>
+    
+    <!-- Navigation (matching home page) -->
+    <nav>
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="../../assets/images/spectrelogo.jpg" alt="SPECTRE Logo">
+                <span>SPECTRE</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="features.html">Features</a>
+                <a href="app.html" class="active">Tool</a>
+            </div>
+            <div id="nav-auth-container"></div>
+        </div>
+    </nav>
+    
+    <div class="app-container">
+        
+        <!-- Page Title -->
+        <div class="page-title-section">
+            <h1 class="page-title">
+                Code <span class="gradient-text">Obfuscation</span> Tool
+            </h1>
+            <p class="page-subtitle">
+                Upload your C/C++ source code and apply enterprise-grade obfuscation with LLVM IR transformation
+            </p>
+        </div>
 
         <main>
-            <div class="card dashboard">
-                <h2>Dashboard</h2>
-                <div class="stats">
-                    <div class="stat-item">
-                        <h3>Files Obfuscated</h3>
-                        <p>1,245</p>
-                    </div>
-                    <div class="stat-item">
-                        <h3>Success Rate</h3>
-                        <p>99.8%</p>
-                    </div>
-                    <div class="stat-item">
-                        <h3>Last Run</h3>
-                        <p>2025-10-05 10:30 AM</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card file-upload">
-                <h2>Upload Source Files (C/C++)</h2>
+            <!-- File Upload Section -->
+            <div class="card file-upload glass-card">
+                <h2 class="section-header">
+                    <i data-lucide="upload"></i>
+                    Upload Source Files
+                </h2>
                 <div class="drop-zone">
                     <span class="drop-zone-icon">📤</span>
                     <p>Drag & drop C/C++ files here or click to browse</p>
-                    <p style="font-size: 0.9em; color: #888; margin-top: 5px;">Supported: .c, .cpp, .cc, .cxx, .h, .hpp</p>
-                    <input type="file" id="fileInput" accept=".c,.cpp,.cc,.cxx,.h,.hpp" multiple>
+                    <p class="file-hint">Supported: .c, .cpp, .cc, .cxx, .h, .hpp</p>
+                    <input type="file" id="fileInput" accept=".c,.cpp,.cc,.cxx,.h,.hpp" multiple title="Upload C/C++ source files" aria-label="Upload C/C++ source files">
                 </div>
                 <div id="file-list"></div>
             </div>
 
-            <div class="card obfuscation-parameters">
-                <h2>Obfuscation Parameters</h2>
+            <!-- Obfuscation Parameters Section -->
+            <div class="card obfuscation-parameters glass-card">
+                <h2 class="section-header">
+                    <i data-lucide="settings"></i>
+                    Configuration
+                </h2>
                 <div class="param-grid">
                     <div class="param-item">
-                        <label for="obfuscation-level">Obfuscation Level</label>
+                        <label for="obfuscation-level" class="label-with-icon">
+                            <i data-lucide="sliders"></i>
+                            Obfuscation Level
+                        </label>
                         <input type="range" id="obfuscation-level" name="obfuscation-level" min="1" max="10" value="5">
                     </div>
                     <div class="param-item">
-                        <label for="compiler">Compiler</label>
+                        <label for="compiler" class="label-with-icon">
+                            <i data-lucide="cpu"></i>
+                            Compiler
+                        </label>
                         <select id="compiler" name="compiler">
-                            <option value="llvm">LLVM (SIH Compliant - Object File Obfuscation)</option>
+                            <option value="llvm">LLVM/Clang (SIH Compliant)</option>
                         </select>
                     </div>
                     <div class="param-item">
-                        <label for="target-platform">Target Platform</label>
+                        <label for="target-platform" class="label-with-icon">
+                            <i data-lucide="monitor"></i>
+                            Target Platform
+                        </label>
                         <select id="target-platform" name="target-platform">
                             <option value="windows">Windows</option>
                             <option value="linux">Linux</option>
                         </select>
                     </div>
                     <div class="param-item full-width">
-                        <label>Obfuscation Mode</label>
+                        <label class="label-with-icon">Obfuscation Mode</label>
                         <div class="mode-selector">
                             <button type="button" class="mode-btn active" data-mode="simple">Simple Mode</button>
                             <button type="button" class="mode-btn" data-mode="expert">Expert Mode</button>
@@ -158,21 +184,33 @@
                     </div>
                 </div>
             </div>
-            <div class="card process-control">
-                <h2>Process Control</h2>
+            <!-- Action Buttons -->
+            <div class="card process-control glass-card">
                 <div class="progress-bar-container">
                     <div class="progress-bar" id="progressBar"></div>
                 </div>
-                <div class="controls">
-                    <button id="reviewBtn">Review Code</button>
-                    <button id="securityBtn" class="security-btn"> Security Scan</button>
-                    <button id="startBtn">Start Obfuscation</button>
-                    <button id="cancelBtn" disabled>Cancel</button>
+                <div class="controls controls-container">
+                    <button id="reviewBtn" class="cta-button secondary btn-with-icon">
+                        <i data-lucide="file-search"></i>
+                        Review Code
+                    </button>
+                    <button id="securityBtn" class="cta-button secondary btn-with-icon">
+                        <i data-lucide="shield-check"></i>
+                        Security Scan
+                    </button>
+                    <button id="startBtn" class="cta-button btn-with-icon btn-primary-large">
+                        <i data-lucide="play"></i>
+                        Start Obfuscation
+                    </button>
                 </div>
             </div>
 
-            <div class="card security-report" id="securityReport" style="display: none;">
-                <h2> Security Analysis Report</h2>
+            <!-- Security Report (Hidden by default) -->
+            <div class="card security-report glass-card" id="securityReport" style="display: none;">
+                <h2 class="section-header">
+                    <i data-lucide="shield-alert"></i>
+                    Security Analysis Report
+                </h2>
                 <div class="security-score-container">
                     <div class="security-score" id="securityScore">
                         <div class="score-circle">
@@ -186,14 +224,17 @@
                 <div class="recommendations" id="recommendations"></div>
             </div>
 
-            <div class="card report-generation">
-                <h2>Reports & Logs</h2>
+            <!-- Logs & Output -->
+            <div class="card report-generation glass-card">
+                <h2 class="section-header">
+                    <i data-lucide="terminal"></i>
+                    Process Logs
+                </h2>
                 <div id="log-output">
                     <p class="log-entry info">[INFO] Welcome to SPECTRE. Ready to obfuscate.</p>
                 </div>
-                <div class="report-actions">
-                    <button>Download Report (PDF)</button>
-                    <button>Download Logs (HTML)</button>
+                <div class="report-actions report-actions-container">
+                    <!-- Download buttons will be added dynamically -->
                 </div>
             </div>
             <div class="card code-review-report" style="display: none;">
@@ -205,12 +246,30 @@
             </div>
         </main>
     </div>
-    <footer>
-        <div class="container">
-            <p>&copy; 2025 SPECTRE Obfuscator. All Rights Reserved.</p>
-        </div>
+    <!-- Footer -->
+    <footer class="app-footer">
+        <p>&copy; 2025 SPECTRE Obfuscator. All Rights Reserved. | Smart India Hackathon 2025</p>
     </footer>
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    
+    <!-- Scripts -->
+    <script src="../js/home.js"></script>
     <script src="../js/script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Background pattern mouse tracking
+        document.addEventListener('mousemove', (e) => {
+            const pattern = document.querySelector('.background-pattern');
+            if (pattern) {
+                const x = (e.clientX / window.innerWidth) * 100;
+                const y = (e.clientY / window.innerHeight) * 100;
+                pattern.style.setProperty('--mouse-x', x + '%');
+                pattern.style.setProperty('--mouse-y', y + '%');
+                pattern.style.setProperty('--mouse-inv-x', (100 - x) + '%');
+                pattern.style.setProperty('--mouse-inv-y', (100 - y) + '%');
+            }
+        });
+    </script>
 </body>
 </html>
