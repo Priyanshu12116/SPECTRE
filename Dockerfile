@@ -35,15 +35,10 @@ WORKDIR /app
 COPY backend/ /app/backend/
 COPY frontend/ /app/frontend/
 COPY start_server.py /app/
-COPY spectre_cli.py /app/
-COPY requirements.txt /app/ 2>/dev/null || :
+COPY assets/ /app/assets/
 
 # Install Python dependencies
-RUN pip3 install --no-cache-dir \
-    flask \
-    flask-cors \
-    requests \
-    cryptography
+RUN pip3 install --no-cache-dir -r /app/backend/requirements.txt
 
 # Create directories for uploads and outputs
 RUN mkdir -p /app/uploads /app/outputs
