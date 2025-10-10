@@ -71,6 +71,13 @@
                         </select>
                     </div>
                     <div class="param-item full-width">
+                        <label>Obfuscation Mode</label>
+                        <div class="mode-selector">
+                            <button type="button" class="mode-btn active" data-mode="simple">Simple Mode</button>
+                            <button type="button" class="mode-btn" data-mode="expert">Expert Mode</button>
+                        </div>
+                    </div>
+                    <div class="param-item full-width" id="simple-mode-options">
                         <label>Obfuscation Methods</label>
                         <div class="toggles">
                             <div class="toggle-switch">
@@ -84,6 +91,68 @@
                             <div class="toggle-switch">
                                 <input type="checkbox" id="string-encryption">
                                 <label for="string-encryption">String Encryption</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="param-item full-width expert-mode-options" style="display: none;">
+                        <label>🎯 Performance Budget</label>
+                        <div class="budget-control">
+                            <input type="range" id="performance-budget" min="0" max="100" value="20" step="5">
+                            <span id="budget-value">20%</span>
+                            <p class="help-text">Maximum acceptable slowdown</p>
+                        </div>
+                    </div>
+                    <div class="param-item full-width expert-mode-options" style="display: none;">
+                        <label>🔧 Advanced Techniques</label>
+                        <div class="expert-grid">
+                            <div class="expert-section">
+                                <h4>Control Flow</h4>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="expert-flattening" checked>
+                                    <label for="expert-flattening">Control Flow Flattening</label>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="expert-bogus-flow" checked>
+                                    <label for="expert-bogus-flow">Bogus Control Flow</label>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="expert-opaque">
+                                    <label for="expert-opaque">Opaque Predicates</label>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="expert-splitting">
+                                    <label for="expert-splitting">Function Splitting</label>
+                                </div>
+                            </div>
+                            <div class="expert-section">
+                                <h4>Data Protection</h4>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="expert-string-enc" checked>
+                                    <label for="expert-string-enc">String Encryption</label>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="expert-const-enc" checked>
+                                    <label for="expert-const-enc">Constant Encoding</label>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="expert-var-rename" checked>
+                                    <label for="expert-var-rename">Variable Renaming</label>
+                                </div>
+                            </div>
+                            <div class="expert-section">
+                                <h4>Runtime Protection</h4>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="expert-anti-debug">
+                                    <label for="expert-anti-debug">Anti-Debugging</label>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="expert-vm-detect">
+                                    <label for="expert-vm-detect">VM Detection</label>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="expert-polymorphic" checked>
+                                    <label for="expert-polymorphic">Polymorphic Engine</label>
+                                </div>
                             </div>
                         </div>
                     </div>

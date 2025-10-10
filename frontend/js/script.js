@@ -652,4 +652,69 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // --- END OF Code Review Feature ---
 
+    // --- EXPERT MODE TOGGLE ---
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    const simpleOptions = document.getElementById('simple-mode-options');
+    const expertOptions = document.querySelectorAll('.expert-mode-options');
+    const budgetSlider = document.getElementById('performance-budget');
+    const budgetValue = document.getElementById('budget-value');
+
+    // Mode switching
+    modeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            
+            // Update active button
+            modeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Show/hide options
+            if (mode === 'simple') {
+                simpleOptions.style.display = 'block';
+                expertOptions.forEach(opt => opt.style.display = 'none');
+                addLog('Switched to Simple Mode', 'info');
+            } else {
+                simpleOptions.style.display = 'none';
+                expertOptions.forEach(opt => opt.style.display = 'block');
+                addLog('Switched to Expert Mode - Advanced controls enabled', 'info');
+            }
+        });
+    });
+
+    // Budget slider
+    if (budgetSlider && budgetValue) {
+        budgetSlider.addEventListener('input', (e) => {
+            budgetValue.textContent = e.target.value + '%';
+        });
+    }
+
+    // Expert mode configuration getter
+    function getExpertConfig() {
+        return {
+            mode: 'expert',
+            performance_budget: parseInt(budgetSlider?.value || 20),
+            techniques: {
+                control_flow: {
+                    flattening: document.getElementById('expert-flattening')?.checked || false,
+                    bogus_flow: document.getElementById('expert-bogus-flow')?.checked || false,
+                    opaque_predicates: document.getElementById('expert-opaque')?.checked || false,
+                    function_splitting: document.getElementById('expert-splitting')?.checked || false
+                },
+                data_protection: {
+                    string_encryption: document.getElementById('expert-string-enc')?.checked || false,
+                    constant_encoding: document.getElementById('expert-const-enc')?.checked || false,
+                    variable_renaming: document.getElementById('expert-var-rename')?.checked || false
+                },
+                runtime_protection: {
+                    anti_debugging: document.getElementById('expert-anti-debug')?.checked || false,
+                    vm_detection: document.getElementById('expert-vm-detect')?.checked || false,
+                    polymorphic: document.getElementById('expert-polymorphic')?.checked || false
+                }
+            }
+        };
+    }
+
+    // Make expert config available globally
+    window.getExpertConfig = getExpertConfig;
+
 });
