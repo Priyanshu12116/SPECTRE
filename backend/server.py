@@ -9,6 +9,7 @@ import tempfile
 from obfuscator import CodeObfuscator
 from advanced_obfuscator import AdvancedObfuscator
 from llvm_obfuscator import LLVMObfuscator
+from security_analyzer import SecurityAnalyzer
 
 app = Flask(__name__)
 CORS(app)
@@ -360,6 +361,35 @@ def llvm_status():
             "llvm_available": False,
             "error": str(e),
             "message": "Failed to check LLVM status"
+        }), 500
+
+@app.route("/api/security/analyze", methods=["POST"])
+def analyze_security():
+    """
+    Security Analysis (SAST) endpoint
+    Analyzes C/C++ code for security vulnerabilities
+    """
+    try:
+        data = request.get_json()
+        code = data.get('code', '')
+        language = data.get('language', 'c')  # 'c' or 'cpp'
+        
+        if not code:
+            return jsonify({"error": "No code provided"}), 400
+        
+        # Run security analysis
+        analyzer = SecurityAnalyzer()
+        result = analyzer.analyze_code(code, language)
+        
+        return jsonify({
+            "success": True,
+            "analysis": result
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
         }), 500
 
 @app.route("/api/status", methods=["GET"])

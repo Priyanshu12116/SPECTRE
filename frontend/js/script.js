@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Check LLVM status - Force LLVM only
             addLog('Checking LLVM toolchain...', 'info');
             try {
-                const statusResponse = await fetch('http://localhost:5000/api/llvm/status');
+                const statusResponse = await fetch('http://127.0.0.1:5000/api/llvm/status');
                 const status = await statusResponse.json();
                 if (!status.llvm_available) {
                     addLog('❌ LLVM not available. Please install LLVM/Clang.', 'error');
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.width = '30%';
             
             // Force LLVM API endpoint only
-            const apiEndpoint = 'http://localhost:5000/api/obfuscate/llvm';
+            const apiEndpoint = 'http://127.0.0.1:5000/api/obfuscate/llvm';
             const response = await fetch(apiEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -422,6 +422,123 @@ document.addEventListener('DOMContentLoaded', () => {
         logOutput.scrollTop = logOutput.scrollHeight;
     }
 
+    // --- SECURITY SCAN FEATURE ---
+    const securityBtn = document.getElementById('securityBtn');
+    const securityReport = document.getElementById('securityReport');
+
+    if (securityBtn) {
+        securityBtn.addEventListener('click', async () => {
+            if (uploadedFiles.length === 0) {
+                addLog('Please upload a file for security analysis.', 'error');
+                return;
+            }
+
+            addLog('🛡️ Starting security analysis...', 'info');
+            securityBtn.disabled = true;
+            securityBtn.textContent = '🔍 Analyzing...';
+
+            const file = uploadedFiles[0];
+            const code = await file.text();
+            const language = file.name.endsWith('.cpp') || file.name.endsWith('.cc') ? 'cpp' : 'c';
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/security/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, language })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displaySecurityReport(result.analysis);
+                    addLog(`✅ Security analysis complete! Score: ${result.analysis.score}/100`, 'success');
+                } else {
+                    addLog(`❌ Security analysis failed: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                securityBtn.disabled = false;
+                securityBtn.textContent = '🛡️ Security Scan';
+            }
+        });
+    }
+
+    function displaySecurityReport(analysis) {
+        // Show the report card
+        securityReport.style.display = 'block';
+        securityReport.scrollIntoView({ behavior: 'smooth' });
+
+        // Display score
+        const scoreValue = document.getElementById('scoreValue');
+        const scoreGrade = document.getElementById('scoreGrade');
+        const scoreCircle = document.querySelector('.score-circle');
+
+        scoreValue.textContent = analysis.score;
+        scoreGrade.textContent = `Grade: ${analysis.grade}`;
+        
+        // Set color based on grade
+        scoreCircle.className = 'score-circle grade-' + analysis.grade.toLowerCase();
+
+        // Display summary
+        const summary = analysis.summary;
+        const summaryHtml = `
+            <div class="summary-item">
+                <span class="summary-label">Total Issues:</span>
+                <span class="summary-value">${summary.total_issues}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Critical:</span>
+                <span class="summary-value critical">${summary.critical}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">High:</span>
+                <span class="summary-value high">${summary.high}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Medium:</span>
+                <span class="summary-value medium">${summary.medium}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Low:</span>
+                <span class="summary-value low">${summary.low}</span>
+            </div>
+        `;
+        document.getElementById('securitySummary').innerHTML = summaryHtml;
+
+        // Display vulnerabilities
+        const vulnerabilities = [...analysis.vulnerabilities, ...analysis.warnings];
+        let vulnHtml = '<h3>Vulnerabilities & Warnings</h3>';
+        
+        if (vulnerabilities.length === 0) {
+            vulnHtml += '<p style="color: var(--success-color); text-align: center; padding: 2rem;">✅ No vulnerabilities detected! Your code looks secure.</p>';
+        } else {
+            vulnerabilities.forEach(vuln => {
+                vulnHtml += `
+                    <div class="vulnerability-item severity-${vuln.severity.toLowerCase()}">
+                        <div class="vulnerability-header">
+                            <span class="vulnerability-type">${vuln.type}</span>
+                            <span class="vulnerability-severity ${vuln.severity.toLowerCase()}">${vuln.severity}</span>
+                        </div>
+                        <div class="vulnerability-description">${vuln.description}</div>
+                        ${vuln.line ? `<div class="vulnerability-line">Line ${vuln.line}</div>` : ''}
+                        ${vuln.function ? `<div class="vulnerability-line">Function: ${vuln.function}</div>` : ''}
+                        <div class="vulnerability-recommendation">💡 ${vuln.recommendation}</div>
+                    </div>
+                `;
+            });
+        }
+        document.getElementById('vulnerabilityList').innerHTML = vulnHtml;
+
+        // Display recommendations
+        let recHtml = '<h3>📋 Recommendations</h3>';
+        analysis.recommendations.forEach(rec => {
+            recHtml += `<div class="recommendation-item">${rec}</div>`;
+        });
+        document.getElementById('recommendations').innerHTML = recHtml;
+    }
+
     // --- START OF Code Review Feature ---
     const reviewBtn = document.getElementById('reviewBtn');
     const reviewOutput = document.getElementById('review-output');
@@ -437,6 +554,9 @@ document.addEventListener('DOMContentLoaded', () => {
             addLog('Starting comprehensive code analysis...', 'info');
             reviewReportCard.style.display = 'block';
             reviewOutput.innerHTML = '<p class="log-entry info">[INFO] Analyzing your code...<br>✓ Checking syntax errors<br>✓ Scanning for security vulnerabilities<br>Please wait...</p>';
+            
+            reviewBtn.disabled = true;
+            reviewBtn.textContent = 'Analyzing...';
 
             const file = uploadedFiles[0];
             const code = await file.text();
@@ -450,8 +570,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 addLog('Code analysis complete!', 'success');
             } catch (error) {
                 const message = (error && error.message) ? error.message : 'Unknown error';
-                reviewOutput.innerHTML = `<p class="log-entry error">[ERROR] Could not get review. ${message}</p>`;
-                addLog(`Failed to get review from server: ${message}`, 'error');
+                
+                // Show helpful error message
+                reviewOutput.innerHTML = `
+                    <div style="padding: 20px; background: rgba(255, 68, 68, 0.1); border-left: 4px solid #ff4444; border-radius: 4px;">
+                        <h3 style="color: #ff4444; margin-bottom: 10px;">⚠️ Server Connection Error</h3>
+                        <p style="color: #e6f1ff; margin-bottom: 15px;">${message}</p>
+                        <div style="background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 4px; margin-top: 15px;">
+                            <h4 style="color: #00ffaa; margin-bottom: 10px;">💡 Solutions:</h4>
+                            <ol style="color: #a8c0d8; line-height: 1.8;">
+                                <li>Make sure the server is running: <code style="background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 3px;">python start_server.py</code></li>
+                                <li>Check server status: <code style="background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 3px;">curl http://127.0.0.1:5000/api/status</code></li>
+                                <li>Restart the server if needed</li>
+                                <li>Use the <strong style="color: #00ffaa;">🛡️ Security Scan</strong> button instead for code analysis</li>
+                            </ol>
+                        </div>
+                    </div>
+                `;
+                addLog(`Code review unavailable. Try Security Scan instead.`, 'error');
+            } finally {
+                reviewBtn.disabled = false;
+                reviewBtn.textContent = 'Review Code';
             }
         });
     }
@@ -460,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         try {
-            const resp = await fetch('http://localhost:5000/api/status', { signal: controller.signal });
+            const resp = await fetch('http://127.0.0.1:5000/api/status', { signal: controller.signal });
             if (!resp.ok) {
                 const txt = await safeReadText(resp);
                 throw new Error(`Backend status error ${resp.status}: ${txt || resp.statusText}`);
@@ -468,9 +607,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return true;
         } catch (err) {
             if (err.name === 'AbortError') {
-                throw new Error('Backend status check timed out at http://localhost:5000/api/status');
+                throw new Error('Backend status check timed out at http://127.0.0.1:5000/api/status');
             }
-            throw new Error(`Cannot reach backend at http://localhost:5000. ${err.message}`);
+            throw new Error(`Cannot reach backend at http://127.0.0.1:5000. ${err.message}`);
         } finally {
             clearTimeout(timeoutId);
         }
@@ -488,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
         try {
-            const response = await fetch('http://localhost:5000/api/review', {
+            const response = await fetch('http://127.0.0.1:5000/api/review', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: code }),
@@ -504,7 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return data.review;
         } catch (err) {
             if (err.name === 'AbortError') {
-                throw new Error('Request timed out. Is the backend reachable at http://localhost:5000?');
+                throw new Error('Request timed out. Is the backend reachable at http://127.0.0.1:5000?');
             }
             throw err;
         } finally {

@@ -96,9 +96,25 @@
                 </div>
                 <div class="controls">
                     <button id="reviewBtn">Review Code</button>
+                    <button id="securityBtn" class="security-btn"> Security Scan</button>
                     <button id="startBtn">Start Obfuscation</button>
                     <button id="cancelBtn" disabled>Cancel</button>
                 </div>
+            </div>
+
+            <div class="card security-report" id="securityReport" style="display: none;">
+                <h2> Security Analysis Report</h2>
+                <div class="security-score-container">
+                    <div class="security-score" id="securityScore">
+                        <div class="score-circle">
+                            <span id="scoreValue">--</span>
+                        </div>
+                        <div class="score-grade" id="scoreGrade">-</div>
+                    </div>
+                    <div class="security-summary" id="securitySummary"></div>
+                </div>
+                <div class="vulnerability-list" id="vulnerabilityList"></div>
+                <div class="recommendations" id="recommendations"></div>
             </div>
 
             <div class="card report-generation">
