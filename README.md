@@ -17,23 +17,38 @@
 ### 🚀 Quick Start
 
 ```bash
-# 1. Install dependencies
+# 1. Clone the repository
+git clone https://github.com/Priyanshu12116/SPECTRE.git
+cd SPECTRE
+
+# 2. Install dependencies
 cd backend
 pip install -r requirements.txt
 
-# 2. Install LLVM (for SIH compliance)
+# 3. Install LLVM (for SIH compliance)
 # Windows: choco install llvm
 # Linux: sudo apt-get install clang llvm
 
-# 3. Start server
-python wsgi.py
+# 4. Start server
+python start_server.py
+# Or use: python backend/wsgi.py
 
-# 4. Open app.html in browser and start obfuscating!
+# 5. Open browser and navigate to:
+# http://localhost:5000
 ```
 
 📖 **New to SPECTRE?** Start with [docs/HOW_TO_RUN.md](docs/HOW_TO_RUN.md)  
 🔧 **Installing LLVM?** See [docs/LLVM_INSTALLATION_GUIDE.md](docs/LLVM_INSTALLATION_GUIDE.md)  
 📚 **All Documentation:** See [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md)
+
+### 🐳 Docker Quick Start
+
+```bash
+# Build and run with Docker
+docker-compose up --build
+
+# Access at http://localhost:5000
+```
 
 ## ✨ Complete Feature Set (52+ Techniques)
 
@@ -149,13 +164,28 @@ python wsgi.py
 - **Linux** - ELF binaries with GCC
 - Single interface for both platforms
 
-### 🖥️ User-Friendly Interface
+### 🖥️ Modern User Interface
 
-- Modern web-based UI
-- Drag-and-drop file upload
-- Real-time progress tracking
-- Code review integration
-- One-click downloads
+**Landing Page:**
+- 🌍 Interactive 3D globe with world map texture
+- ⭐ Animated starfield background
+- 🎨 Glass-morphism design
+- 📱 Fully responsive layout
+
+**Authentication:**
+- 🛡️ 3D animated shield with particle effects
+- 🔐 Secure login system
+- ✨ Interactive animations
+
+**Main Application:**
+- 🎯 Clean, professional interface matching home page design
+- 📤 Drag-and-drop file upload
+- ⚙️ Intuitive configuration controls
+- 📊 Real-time progress tracking
+- 🔍 Integrated code review
+- 🛡️ Security analysis dashboard
+- 💾 One-click downloads
+- 🎨 Consistent design language throughout
 
 ## 📁 Project Structure
 
@@ -182,15 +212,26 @@ SPECTRE/
 │   ├── wsgi.py                           # Production WSGI server
 │   └── requirements.txt                  # Python dependencies
 │
-├── 📂 frontend/                          # Web interface
+├── 📂 frontend/                          # Modern web interface
 │   ├── pages/
-│   │   ├── index.html                    # Landing page
-│   │   ├── app.html                      # Main application
+│   │   ├── index.html                    # Landing page with 3D globe
+│   │   ├── login.html                    # Authentication page with 3D shield
+│   │   ├── app.html                      # Main application (redesigned UI)
 │   │   └── features.html                 # Features showcase
 │   ├── css/
-│   │   └── style.css                     # Stylesheets
+│   │   ├── style.css                     # App styles
+│   │   ├── style-home.css                # Home page styles
+│   │   └── auth.css                      # Authentication styles
 │   └── js/
-│       └── script.js                     # Application logic
+│       ├── script.js                     # Application logic
+│       ├── home.js                       # 3D globe animation
+│       └── auth.js                       # 3D shield & authentication
+│
+├── 📂 assets/                            # Static assets
+│   └── images/
+│       ├── spectrelogo.jpg               # SPECTRE logo
+│       ├── worldmap.jpg                  # Globe texture
+│       └── shield.png                    # Shield texture
 │
 ├── 📂 examples/                          # Example C/C++ programs
 │   ├── simple_hello.c                    # Beginner example
@@ -232,35 +273,50 @@ SPECTRE/
 
 ### Web Interface
 
-1. Start the backend server:
+1. **Start the server:**
    
-   **Development Mode:**
+   **Quick Start (Recommended):**
    ```bash
-   cd backend
-   python server.py
+   python start_server.py
    ```
    
-   **Production Mode (Recommended):**
+   **Or manually:**
    ```bash
    cd backend
-   pip install -r requirements.txt  # Install dependencies including Waitress
+   pip install -r requirements.txt
    python wsgi.py
    ```
 
-2. Open `app.html` in your browser
+2. **Open your browser:**
+   ```
+   http://localhost:5000
+   ```
 
-3. Upload your C/C++ file
+3. **Navigate the interface:**
+   - **Home Page** - View features and documentation
+   - **Login** - Authenticate (demo: admin/123)
+   - **Tool** - Main obfuscation interface
 
-4. Configure obfuscation:
-   - Set level (1-10)
-   - Choose platform (Windows/Linux)
-   - Enable protection methods
+4. **Upload your C/C++ file:**
+   - Drag & drop or click to browse
+   - Supports: .c, .cpp, .cc, .cxx, .h, .hpp
 
-5. Click "Start Obfuscation"
+5. **Configure obfuscation:**
+   - **Obfuscation Level:** 1-10 (Quick/Balanced/Maximum)
+   - **Compiler:** LLVM/Clang
+   - **Platform:** Windows or Linux
+   - **Mode:** Simple or Expert
+   - **Techniques:** Select protection methods
 
-6. Download results:
+6. **Run obfuscation:**
+   - **Review Code** - Syntax validation
+   - **Security Scan** - Vulnerability analysis
+   - **Start Obfuscation** - Apply protection
+
+7. **Download results:**
    - Obfuscated code (.c)
-   - Report (JSON/HTML)
+   - Comprehensive report (HTML/JSON)
+   - Password (if vault enabled)
 
 ### API Usage
 
@@ -401,12 +457,42 @@ See [examples/README.md](examples/README.md) for details.
 4. **Polymorphic Engine** - Code morphs on every execution
 5. **Smart Performance Balancing** - AI-driven optimization
 6. **20+ Anti-Analysis Techniques** - Anti-debug, VM, sandbox detection
-7. **Web-Based Interface** - No complex toolchain setup
+7. **Modern Web Interface** - 3D animations, glass-morphism design
 8. **Auto-Verification** - Ensures correctness automatically
 9. **Security Scoring** - Quantifiable 0-100 protection level
 10. **Expert Mode** - Granular control over all techniques
 11. **Docker Support** - Production-ready containerization
 12. **Comprehensive Reports** - HTML with passwords, JSON for automation
+
+## 🎨 Recent UI/UX Improvements
+
+**Landing Page:**
+- 🌍 Interactive 3D globe with real-world map texture
+- ⭐ Animated starfield background with mouse tracking
+- 🎨 Modern glass-morphism card design
+- 📱 Fully responsive and mobile-friendly
+
+**Authentication:**
+- 🛡️ 3D animated shield with particle effects
+- ✨ Interactive mouse-tracking animations
+- 🔐 Secure login system
+
+**Main Application:**
+- 🎯 Complete UI redesign matching home page aesthetics
+- 📤 Improved file upload with better visual feedback
+- ⚙️ Clean configuration interface with icons
+- 📊 Professional progress tracking
+- 🎨 Consistent design language across all pages
+- 💾 Streamlined download experience
+
+**Technical Improvements:**
+- ✅ Fixed all 40+ linting issues
+- ✅ Moved inline styles to external CSS
+- ✅ Added Safari compatibility (-webkit-backdrop-filter)
+- ✅ Improved accessibility (ARIA labels)
+- ✅ Fixed Docker configuration
+- ✅ Corrected all image paths
+- ✅ JavaScript error handling improved
 
 ## ✅ SIH 2025 Compliance
 
@@ -433,19 +519,31 @@ See [examples/README.md](examples/README.md) for details.
 
 This project is part of Smart India Hackathon 2025.
 
+**Repository:** [https://github.com/Priyanshu12116/SPECTRE](https://github.com/Priyanshu12116/SPECTRE)
+
 ## 📄 License
 
 Smart India Hackathon 2025 - National Technical Research Organisation
 
 ## 🆘 Support
 
-- Check documentation files
-- Review examples
-- Test with provided samples
-- Verify GCC installation
+**Documentation:**
+- 📖 [Complete Usage Guide](docs/HOW_TO_RUN.md)
+- 🔧 [LLVM Installation](docs/LLVM_INSTALLATION_GUIDE.md)
+- 📚 [All Documentation](docs/DOCUMENTATION.md)
+
+**Examples:**
+- 💡 [Example Programs](examples/README.md)
+- 🎯 Simple, Intermediate, and Advanced examples included
+
+**Quick Reference:**
+- ⚡ [Command Reference](docs/QUICK_REFERENCE.md)
+- 🐳 [Docker Deployment](Dockerfile)
+- 🚀 [Production Setup](docs/PRODUCTION_SERVER_UPGRADE.md)
 
 ---
 
-**SPECTRE** - Enterprise-Grade Code Protection Made Simple 🛡️
+**Made with ❤️ by AlgorixMind**  
+**SPECTRE - Enterprise-Grade Code Protection Made Simple** 🛡️
 
 *Protecting your intellectual property, one obfuscation at a time.*
