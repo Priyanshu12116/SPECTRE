@@ -1,47 +1,48 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- NEW: Dynamic Login/Logout Button Logic ---
+    // --- Dynamic Login/Logout Button Logic ---
     const authContainer = document.getElementById('nav-auth-container');
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
 
     if (authContainer) {
         if (isLoggedIn) {
-            // If logged in, show Logout button
             authContainer.innerHTML = '<button id="logout-btn" class="logout-btn">Logout</button>';
             const logoutBtn = document.getElementById('logout-btn');
             logoutBtn.addEventListener('click', () => {
                 localStorage.removeItem('isLoggedIn');
                 localStorage.removeItem('username');
-                window.location.href = 'index.html'; // Redirect to home
+                sessionStorage.removeItem('redirectAfterLogin'); // Clear any stored redirect paths on logout
+                window.location.href = 'index.html';
             });
         } else {
-            // If not logged in, show Login/Sign Up button
             authContainer.innerHTML = '<a href="login.html" class="cta-button nav-cta">Login / Sign Up</a>';
         }
     }
 
-       // --- NEW: Protected Route Logic ---
+    // --- UPDATED: Protected Route Logic ---
     const toolLink = document.getElementById('tool-link');
     if (toolLink) {
-        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         if (!isLoggedIn) {
-            // If user is not logged in, change the link's behavior
             toolLink.addEventListener('click', (e) => {
-                e.preventDefault(); // Stop the link from going to app.html
-                window.location.href = 'login.html'; // Redirect to the login page
+                e.preventDefault(); // Stop the link from going anywhere yet
+                
+                // **NEW:** Store the intended destination before redirecting to login
+                sessionStorage.setItem('redirectAfterLogin', 'dashboard.html'); 
+                
+                // Now, send the user to the login page
+                window.location.href = 'login.html'; 
             });
         }
-        // If the user is logged in, the link works as normal (href="app.html")
+        // If the user is logged in, the link works as normal (href="dashboard.html")
     }
 
     // --- Globe animation logic ---
     const container = document.getElementById('globe-container');
-    // UPDATED: Check if the globe container exists before running globe-specific code
     if (container) {
-        // This will only run on index.html
         initGlobe();
     }
 
     async function initGlobe() {
+        // ... (rest of the globe code is unchanged) ...
         let scene, camera, renderer, globe, atmosphere;
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
@@ -69,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createGlobeTextureFromImage(imageUrl) {
+        // ... (rest of the globe code is unchanged) ...
         return new Promise((resolve) => {
             const image = new Image();
             image.src = imageUrl;
@@ -105,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupInteractivityAndAnimation(container, globe, atmosphere, scene, camera, renderer) {
+        // ... (rest of the globe code is unchanged) ...
         let isMouseDown = false;
         let previousMousePosition = { x: 0, y: 0 };
         container.addEventListener('mousedown', (e) => { isMouseDown = true; });
@@ -137,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Code for the interactive background (runs on all pages) ---
     document.addEventListener('mousemove', (e) => {
+        // ... (rest of the code is unchanged) ...
         const mouseX = e.clientX;
         const mouseY = e.clientY;
         const inverseX = window.innerWidth - mouseX;
@@ -149,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Scroll Animation Logic (runs on all pages) ---
     const observer = new IntersectionObserver((entries) => {
+        // ... (rest of the code is unchanged) ...
         entries.forEach((entry) => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('visible');
@@ -159,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, {
         threshold: 0.1
     });
-    // UPDATED: Now watches for cards on both pages
     const elementsToAnimate = document.querySelectorAll('.stats-card, .problem-section, .features-intro, .feature-card, .cta-section, .feature-detail-card');
     elementsToAnimate.forEach((el) => observer.observe(el));
     
@@ -167,6 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastScrollTop = 0;
     const navbar = document.querySelector('nav');
     if (navbar) {
+        // ... (rest of the code is unchanged) ...
         window.addEventListener('scroll', () => {
             let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             if (scrollTop > lastScrollTop && scrollTop > 100) {

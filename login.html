@@ -4,25 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SPECTRE Login</title>
-    <link rel="stylesheet" href="auth.css">
     <link rel="icon" href="spectrelogo.jpg" type="image/jpeg">
+    <link rel="stylesheet" href="auth.css">
 </head>
 <body>
-    <div class="login-container">
-        <div class="lock-graphic" id="lockGraphic">
-            <div class="lock-body"></div>
-            <div class="lock-shackle"></div>
+    <!-- Main wrapper for the two-column layout -->
+    <div class="auth-wrapper">
+        <!-- Left side: 3D Interactive Shield -->
+        <div class="shield-container" id="shield-container">
+            <!-- The 3D canvas will be injected here by JavaScript -->
         </div>
-        <h1>Welcome Back</h1>
-        <p>Log in to access SPECTRE's advanced obfuscation tools.</p>
-        <form id="loginForm">
-            <input type="text" id="username" placeholder="Username" required>
-            <input type="password" placeholder="Password" required>
-            <button type="submit">Log In</button>
-        </form>
-        <p class="message" id="loginMessage"></p>
+
+        <!-- Right side: Login Form -->
+        <div class="login-container">
+            <h1>Welcome Back</h1>
+            <p>Authenticate to access the SPECTRE platform.</p>
+            <form id="loginForm">
+                <input type="text" id="username" placeholder="Username // admin" required>
+                <input type="password" placeholder="Password // 123" required>
+                <button type="submit">Authenticate & Enter</button>
+            </form>
+            <p class="message" id="loginMessage"></p>
+        </div>
     </div>
 
+    <!-- Add Three.js library for the 3D shield -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="auth.js"></script>
 </body>
 </html>
+
