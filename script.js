@@ -134,4 +134,96 @@ document.addEventListener('DOMContentLoaded', () => {
         logOutput.appendChild(logEntry);
         logOutput.scrollTop = logOutput.scrollHeight;
     }
+
+    // --- START OF Code Review Feature ---
+    const reviewBtn = document.getElementById('reviewBtn');
+    const reviewOutput = document.getElementById('review-output');
+    const reviewReportCard = document.querySelector('.code-review-report');
+
+    if (reviewBtn) {
+        reviewBtn.addEventListener('click', async () => {
+            if (uploadedFiles.length === 0) {
+                addLog('Please upload a file to review.', 'error');
+                return;
+            }
+
+            addLog('Starting comprehensive code analysis...', 'info');
+            reviewReportCard.style.display = 'block';
+            reviewOutput.innerHTML = '<p class="log-entry info">[INFO] Analyzing your code...<br>✓ Checking syntax errors<br>✓ Scanning for security vulnerabilities<br>Please wait...</p>';
+
+            const file = uploadedFiles[0];
+            const code = await file.text();
+
+            try {
+                // Check server status before attempting review
+                await ensureBackendUp();
+
+                const review = await getCodeReviewFromServer(code);
+                reviewOutput.innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word;">${review}</pre>`;
+                addLog('Code analysis complete!', 'success');
+            } catch (error) {
+                const message = (error && error.message) ? error.message : 'Unknown error';
+                reviewOutput.innerHTML = `<p class="log-entry error">[ERROR] Could not get review. ${message}</p>`;
+                addLog(`Failed to get review from server: ${message}`, 'error');
+            }
+        });
+    }
+
+    async function ensureBackendUp() {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        try {
+            const resp = await fetch('http://localhost:5000/api/status', { signal: controller.signal });
+            if (!resp.ok) {
+                const txt = await safeReadText(resp);
+                throw new Error(`Backend status error ${resp.status}: ${txt || resp.statusText}`);
+            }
+            return true;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                throw new Error('Backend status check timed out at http://localhost:5000/api/status');
+            }
+            throw new Error(`Cannot reach backend at http://localhost:5000. ${err.message}`);
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    }
+
+    async function safeReadText(response) {
+        try {
+            return await response.text();
+        } catch (_) {
+            return '';
+        }
+    }
+
+    async function getCodeReviewFromServer(code) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        try {
+            const response = await fetch('http://localhost:5000/api/review', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code }),
+                signal: controller.signal
+            });
+
+            if (!response.ok) {
+                const text = await safeReadText(response);
+                throw new Error(`Server error ${response.status}: ${text || response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.review;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                throw new Error('Request timed out. Is the backend reachable at http://localhost:5000?');
+            }
+            throw err;
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    }
+    // --- END OF Code Review Feature ---
+
 });

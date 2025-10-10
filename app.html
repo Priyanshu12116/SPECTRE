@@ -82,13 +82,13 @@
                     </div>
                 </div>
             </div>
-
             <div class="card process-control">
                 <h2>Process Control</h2>
                 <div class="progress-bar-container">
                     <div class="progress-bar" id="progressBar"></div>
                 </div>
                 <div class="controls">
+                    <button id="reviewBtn">Review Code</button>
                     <button id="startBtn">Start Obfuscation</button>
                     <button id="cancelBtn" disabled>Cancel</button>
                 </div>
@@ -102,6 +102,13 @@
                 <div class="report-actions">
                     <button>Download Report (PDF)</button>
                     <button>Download Logs (HTML)</button>
+                </div>
+            </div>
+            <div class="card code-review-report" style="display: none;">
+                <h2>SPECTRE Code Analysis Report</h2>
+                <p class="subtitle">Syntax Validation & Security Review</p>
+                <div id="review-output">
+                    <p>Your code analysis report will appear here...</p>
                 </div>
             </div>
         </main>
