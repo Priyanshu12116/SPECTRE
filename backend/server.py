@@ -1,9 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import requests
 from datetime import datetime
 import re
 import os
+import json
+import tempfile
+from obfuscator import CodeObfuscator
 
 app = Flask(__name__)
 CORS(app)
@@ -152,6 +155,64 @@ def review_code():
     
     print("INFO: Review completed successfully")
     return jsonify({"review": review_report})
+
+@app.route("/api/obfuscate", methods=["POST"])
+def obfuscate_code():
+    """Obfuscate code with verification and reporting"""
+    try:
+        data = request.json
+        code = data.get("code", "")
+        password = data.get("password", "SPECTRE_DEFAULT_2025")
+        level = data.get("level", "balanced")
+        test_input = data.get("test_input", "")
+        verify = data.get("verify", True)
+        create_vault = data.get("create_vault", True)
+        
+        if not code:
+            return jsonify({"error": "No code provided"}), 400
+        
+        print(f"INFO: Starting obfuscation (level: {level}, verify: {verify})")
+        
+        # Initialize obfuscator
+        obfuscator = CodeObfuscator()
+        
+        # Step 1: Create code vault if requested
+        vault_created = False
+        if create_vault:
+            print("INFO: Creating password-protected code vault...")
+            vault_path = os.path.join(tempfile.gettempdir(), f"code_vault_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip")
+            vault_created = obfuscator.create_code_vault(code, password, vault_path)
+        
+        # Step 2: Apply obfuscation
+        print("INFO: Applying obfuscation transformations...")
+        obfuscated_code = obfuscator.apply_obfuscation(code, password, level)
+        
+        # Step 3: Verify if requested
+        verification_result = {'verified': None, 'reason': 'Verification skipped'}
+        if verify:
+            print("INFO: Verifying obfuscated code...")
+            verification_result = obfuscator.verify_obfuscation(code, obfuscated_code, test_input)
+        
+        # Step 4: Generate report
+        config = {
+            'level': level,
+            'password_protected': create_vault,
+            'verify': verify
+        }
+        report = obfuscator.generate_report(code, obfuscated_code, verification_result, config)
+        
+        print(f"INFO: Obfuscation complete! Status: {report['status']}")
+        
+        return jsonify({
+            "success": True,
+            "obfuscated_code": obfuscated_code,
+            "report": report,
+            "vault_created": vault_created
+        })
+        
+    except Exception as e:
+        print(f"ERROR: Obfuscation failed: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/status", methods=["GET"])
 def status():
