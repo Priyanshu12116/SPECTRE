@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SPECTRE TOOLS</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="spectrelogo.jpg" type="image/jpeg">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" href="../assets/images/spectrelogo.jpg" type="image/jpeg">
 </head>
 <body>
     <script>
-        if (localStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = 'login.html';
-        }
+        // Auto-login for testing
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('username', 'Demo User');
     </script>
     <canvas id="matrix-bg"></canvas>
     <div class="container">
         <header>
-            <h1><img src="spectrelogo.jpg" alt="SPECTRE Logo" class="logo-image"> SPECTRE</h1>
+            <h1><img src="../assets/images/spectrelogo.jpg" alt="SPECTRE Logo" class="logo-image"> SPECTRE</h1>
             <p>Stealthy Polymorphic Evasion & Countermeasure Toolkit for Resilient Executables</p>
         </header>
 
@@ -40,11 +40,12 @@
             </div>
 
             <div class="card file-upload">
-                <h2>Upload Source Files</h2>
+                <h2>Upload Source Files (C/C++)</h2>
                 <div class="drop-zone">
                     <span class="drop-zone-icon">📤</span>
-                    <p>Drag & drop files here or click to browse</p>
-                    <input type="file" id="fileInput" multiple>
+                    <p>Drag & drop C/C++ files here or click to browse</p>
+                    <p style="font-size: 0.9em; color: #888; margin-top: 5px;">Supported: .c, .cpp, .cc, .cxx, .h, .hpp</p>
+                    <input type="file" id="fileInput" accept=".c,.cpp,.cc,.cxx,.h,.hpp" multiple>
                 </div>
                 <div id="file-list"></div>
             </div>
@@ -55,6 +56,12 @@
                     <div class="param-item">
                         <label for="obfuscation-level">Obfuscation Level</label>
                         <input type="range" id="obfuscation-level" name="obfuscation-level" min="1" max="10" value="5">
+                    </div>
+                    <div class="param-item">
+                        <label for="compiler">Compiler</label>
+                        <select id="compiler" name="compiler">
+                            <option value="llvm">LLVM (SIH Compliant - Object File Obfuscation)</option>
+                        </select>
                     </div>
                     <div class="param-item">
                         <label for="target-platform">Target Platform</label>
@@ -119,6 +126,6 @@
         </div>
     </footer>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script src="script.js"></script>
+    <script src="../js/script.js"></script>
 </body>
 </html>

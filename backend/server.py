@@ -7,6 +7,8 @@ import os
 import json
 import tempfile
 from obfuscator import CodeObfuscator
+from advanced_obfuscator import AdvancedObfuscator
+from llvm_obfuscator import LLVMObfuscator
 
 app = Flask(__name__)
 CORS(app)
@@ -158,7 +160,7 @@ def review_code():
 
 @app.route("/api/obfuscate", methods=["POST"])
 def obfuscate_code():
-    """Obfuscate code with verification and reporting"""
+    """Obfuscate code with verification and reporting (Basic version)"""
     try:
         data = request.json
         code = data.get("code", "")
@@ -213,6 +215,152 @@ def obfuscate_code():
     except Exception as e:
         print(f"ERROR: Obfuscation failed: {e}")
         return jsonify({"error": str(e)}), 500
+
+@app.route("/api/obfuscate/advanced", methods=["POST"])
+def obfuscate_code_advanced():
+    """Advanced obfuscation with comprehensive protection layers"""
+    try:
+        data = request.json
+        code = data.get("code", "")
+        password = data.get("password", "SPECTRE_ADVANCED_2025")
+        level = data.get("level", "balanced")
+        platform = data.get("platform", "windows")
+        test_input = data.get("test_input", "")
+        verify = data.get("verify", True)
+        create_vault = data.get("create_vault", True)
+        
+        if not code:
+            return jsonify({"error": "No code provided"}), 400
+        
+        print(f"INFO: Starting ADVANCED obfuscation (level: {level}, platform: {platform})")
+        
+        # Initialize advanced obfuscator
+        obfuscator = AdvancedObfuscator()
+        
+        # Step 1: Create code vault if requested
+        vault_created = False
+        if create_vault:
+            print("INFO: Creating password-protected code vault...")
+            vault_path = os.path.join(tempfile.gettempdir(), f"code_vault_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip")
+            vault_created = obfuscator.create_code_vault(code, password, vault_path)
+        
+        # Step 2: Apply advanced obfuscation
+        print("INFO: Applying advanced obfuscation transformations...")
+        obfuscated_code = obfuscator.apply_obfuscation(code, password, level, platform)
+        
+        # Step 3: Verify if requested
+        verification_result = {'verified': None, 'reason': 'Verification skipped'}
+        if verify:
+            print("INFO: Verifying obfuscated code...")
+            verification_result = obfuscator.verify_obfuscation(code, obfuscated_code, test_input, platform)
+        
+        # Step 4: Generate comprehensive report
+        config = {
+            'level': level,
+            'platform': platform,
+            'password_protected': create_vault,
+            'verify': verify
+        }
+        report = obfuscator.generate_report(code, obfuscated_code, verification_result, config)
+        
+        print(f"INFO: Advanced obfuscation complete! Status: {report['status']}")
+        print(f"INFO: Security Score: {report['security_score']}/100")
+        
+        return jsonify({
+            "success": True,
+            "obfuscated_code": obfuscated_code,
+            "report": report,
+            "vault_created": vault_created
+        })
+        
+    except Exception as e:
+        print(f"ERROR: Advanced obfuscation failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/obfuscate/llvm", methods=["POST"])
+def obfuscate_with_llvm():
+    """LLVM-based obfuscation (SIH compliant - object file obfuscation)"""
+    try:
+        data = request.json
+        code = data.get("code", "")
+        level = data.get("level", "balanced")
+        platform = data.get("platform", "windows")
+        use_ollvm = data.get("use_ollvm", False)
+        
+        if not code:
+            return jsonify({"error": "No code provided"}), 400
+        
+        print(f"INFO: Starting LLVM obfuscation (level: {level}, platform: {platform})")
+        
+        # Initialize LLVM obfuscator
+        obfuscator = LLVMObfuscator()
+        
+        # Check LLVM availability
+        if not obfuscator.llvm_available:
+            return jsonify({
+                "error": "LLVM toolchain not available. Please install LLVM/Clang.",
+                "status": obfuscator.get_status(),
+                "install_guide": "See LLVM_INSTALLATION_GUIDE.md for installation instructions"
+            }), 500
+        
+        # Perform LLVM-based obfuscation
+        result = obfuscator.obfuscate(code, level, platform, use_ollvm)
+        
+        if not result['success']:
+            return jsonify({
+                "error": result['error'],
+                "stats": result.get('stats', {})
+            }), 500
+        
+        # Generate comprehensive report
+        config = {
+            'level': level,
+            'platform': platform,
+            'use_ollvm': use_ollvm
+        }
+        report = obfuscator.generate_report(result, config)
+        
+        print(f"INFO: LLVM obfuscation complete! Status: {report['status']}")
+        print(f"INFO: Object file size: {result['object_size']} bytes")
+        
+        return jsonify({
+            "success": True,
+            "obfuscated_ir": result['obfuscated_ir'],
+            "object_file_size": result['object_size'],
+            "executable_size": result['executable_size'],
+            "report": report,
+            "llvm_method": True,
+            "sih_compliant": True
+        })
+        
+    except Exception as e:
+        print(f"ERROR: LLVM obfuscation failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/llvm/status", methods=["GET"])
+def llvm_status():
+    """Check LLVM toolchain status"""
+    try:
+        obfuscator = LLVMObfuscator()
+        status = obfuscator.get_status()
+        
+        return jsonify({
+            "llvm_available": status['llvm_available'],
+            "ollvm_available": status['ollvm_available'],
+            "tools": status['tools'],
+            "ready": status['llvm_available'],
+            "message": "LLVM toolchain is ready" if status['llvm_available'] else "LLVM toolchain not found"
+        })
+    except Exception as e:
+        return jsonify({
+            "llvm_available": False,
+            "error": str(e),
+            "message": "Failed to check LLVM status"
+        }), 500
 
 @app.route("/api/status", methods=["GET"])
 def status():

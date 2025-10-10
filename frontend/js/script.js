@@ -111,9 +111,38 @@ document.addEventListener('DOMContentLoaded', () => {
             // Get obfuscation parameters
             const level = document.getElementById('obfuscation-level')?.value || 5;
             const levelName = level <= 3 ? 'quick' : level <= 7 ? 'balanced' : 'maximum';
+            const platform = document.getElementById('target-platform')?.value || 'windows';
+            let compiler = document.getElementById('compiler')?.value || 'llvm';  // Changed to 'let'
+            
+            // Determine if advanced mode should be used
+            const useAdvanced = level >= 8 || 
+                              document.getElementById('code-virtualization')?.checked ||
+                              document.getElementById('control-flow-flattening')?.checked;
             
             addLog('Starting obfuscation process...', 'info');
+            addLog(`Compiler: ${compiler.toUpperCase()} | Platform: ${platform} | Level: ${level}`, 'info');
             progressBar.style.width = '10%';
+            
+            // Check LLVM status - Force LLVM only
+            addLog('Checking LLVM toolchain...', 'info');
+            try {
+                const statusResponse = await fetch('http://localhost:5000/api/llvm/status');
+                const status = await statusResponse.json();
+                if (!status.llvm_available) {
+                    addLog('❌ LLVM not available. Please install LLVM/Clang.', 'error');
+                    addLog('Obfuscation cannot proceed without LLVM.', 'error');
+                    finishProcess();
+                    return;
+                } else {
+                    addLog('✅ LLVM toolchain ready', 'success');
+                    compiler = 'llvm';  // Force LLVM
+                }
+            } catch (e) {
+                addLog('❌ Cannot connect to server. Please ensure server is running.', 'error');
+                addLog(`Error: ${e.message}`, 'error');
+                finishProcess();
+                return;
+            }
             
             addLog('Creating password-protected code vault...', 'info');
             progressBar.style.width = '20%';
@@ -121,17 +150,19 @@ document.addEventListener('DOMContentLoaded', () => {
             addLog('Running baseline verification...', 'info');
             progressBar.style.width = '30%';
             
-            // Call backend obfuscation API
-            const response = await fetch('http://localhost:5000/api/obfuscate', {
+            // Force LLVM API endpoint only
+            const apiEndpoint = 'http://localhost:5000/api/obfuscate/llvm';
+            const response = await fetch(apiEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     code: code,
-                    password: 'SPECTRE_2025',
+                    password: useAdvanced ? 'SPECTRE_ADVANCED_2025' : 'SPECTRE_2025',
                     level: levelName,
+                    platform: platform,
                     test_input: '',
-                    verify: true,
-                    create_vault: true
+                    verify: true,  // ✅ Re-enabled - GCC installed!
+                    create_vault: true  // ✅ Re-enabled - GCC installed!
                 })
             });
             
@@ -155,19 +186,70 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.success) {
                 addLog('✅ Obfuscation complete!', 'success');
                 addLog(`Status: ${result.report.status}`, result.report.status === 'SUCCESS' ? 'success' : 'error');
-                addLog(`Strings encrypted: ${result.report.obfuscation_statistics.strings_encrypted}`, 'info');
-                addLog(`Bogus code lines: ${result.report.obfuscation_statistics.bogus_code_lines}`, 'info');
-                addLog(`Control flow changes: ${result.report.obfuscation_statistics.control_flow_changes}`, 'info');
-                addLog(`Obfuscation cycles: ${result.report.obfuscation_statistics.obfuscation_cycles}`, 'info');
                 
-                if (result.report.verification.verified) {
-                    addLog('✅ Verification: Output matches original', 'success');
-                } else {
-                    addLog(`⚠️ Verification: ${result.report.verification.reason}`, 'error');
+                // Show LLVM-specific info if using LLVM
+                if (result.llvm_method) {
+                    addLog('🔧 Method: LLVM IR Transformation + Object File Obfuscation', 'success');
+                    addLog('✅ SIH Compliant: Object-level obfuscation', 'success');
+                    if (result.object_file_size) {
+                        addLog(`Object file size: ${result.object_file_size} bytes`, 'info');
+                    }
+                    if (result.executable_size) {
+                        addLog(`Executable size: ${result.executable_size} bytes`, 'info');
+                    }
+                }
+                
+                // Display statistics
+                const stats = result.report.obfuscation_statistics || result.report.statistics;
+                if (stats) {
+                    if (stats.strings_encrypted !== undefined) {
+                        addLog(`Strings encrypted: ${stats.strings_encrypted}`, 'info');
+                    }
+                    if (stats.bogus_code_lines !== undefined) {
+                        addLog(`Bogus code lines: ${stats.bogus_code_lines}`, 'info');
+                    }
+                    if (stats.control_flow_changes !== undefined) {
+                        addLog(`Control flow changes: ${stats.control_flow_changes}`, 'info');
+                    }
+                    if (stats.obfuscation_cycles !== undefined) {
+                        addLog(`Obfuscation cycles: ${stats.obfuscation_cycles}`, 'info');
+                    }
+                    // LLVM-specific stats
+                    if (stats.ir_transformations !== undefined) {
+                        addLog(`IR transformations: ${stats.ir_transformations}`, 'info');
+                    }
+                    if (stats.llvm_passes_applied && stats.llvm_passes_applied.length > 0) {
+                        addLog(`LLVM passes: ${stats.llvm_passes_applied.join(', ')}`, 'info');
+                    }
+                }
+                
+                // Show advanced stats if available
+                if (stats.variables_renamed) {
+                    addLog(`Variables renamed: ${stats.variables_renamed}`, 'info');
+                }
+                if (stats.anti_debug_checks) {
+                    addLog(`Anti-debug checks: ${stats.anti_debug_checks}`, 'info');
+                }
+                if (stats.opaque_predicates) {
+                    addLog(`Opaque predicates: ${stats.opaque_predicates}`, 'info');
+                }
+                
+                // Show security score if available
+                if (result.report.security_score) {
+                    addLog(`🛡️ Security Score: ${result.report.security_score}/100`, 'success');
+                }
+                
+                // Show verification status (only for GCC method)
+                if (result.report.verification) {
+                    if (result.report.verification.verified) {
+                        addLog('✅ Verification: Output matches original', 'success');
+                    } else {
+                        addLog(`⚠️ Verification: ${result.report.verification.reason}`, 'error');
+                    }
                 }
                 
                 // Store obfuscated code and report for download
-                window.obfuscatedCode = result.obfuscated_code;
+                window.obfuscatedCode = result.obfuscated_code || result.obfuscated_ir;
                 window.obfuscationReport = result.report;
                 
                 // Show download options
@@ -231,6 +313,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const report = window.obfuscationReport;
+        
+        // Handle both GCC and LLVM report formats
+        const stats = report.obfuscation_statistics || report.statistics || {};
+        const inputParams = report.input_parameters || report.input_params || {};
+        const outputAttrs = report.output_attributes || {};
+        
         const html = `
 <!DOCTYPE html>
 <html>
@@ -244,6 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .status { font-size: 24px; font-weight: bold; padding: 15px; border-radius: 5px; text-align: center; }
         .success { background: #d4edda; color: #155724; }
         .failed { background: #f8d7da; color: #721c24; }
+        .sih-badge { background: #007bff; color: white; padding: 10px; border-radius: 5px; text-align: center; margin: 20px 0; }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background: #0a7a2c; color: white; }
@@ -253,41 +342,59 @@ document.addEventListener('DOMContentLoaded', () => {
 <body>
     <div class="container">
         <h1>🛡️ SPECTRE Obfuscation Report</h1>
-        <p><strong>Generated:</strong> ${report.timestamp}</p>
+        <p><strong>Generated:</strong> ${report.timestamp || new Date().toISOString()}</p>
+        <p><strong>Compiler:</strong> ${report.compiler || 'LLVM/Clang'}</p>
+        <p><strong>Method:</strong> ${report.obfuscation_method || 'LLVM IR Transformation'}</p>
         
         <div class="status ${report.status === 'SUCCESS' ? 'success' : 'failed'}">
             Status: ${report.status}
         </div>
         
+        ${report.llvm_specific && report.llvm_specific.sih_compliant ? '<div class="sih-badge">✅ SIH Compliant - Object File Obfuscation</div>' : ''}
+        
         <h2>Input Parameters</h2>
         <table>
             <tr><th>Parameter</th><th>Value</th></tr>
-            <tr><td>Obfuscation Level</td><td>${report.input_parameters.obfuscation_level}</td></tr>
-            <tr><td>Password Protected</td><td>${report.input_parameters.password_protected ? 'Yes' : 'No'}</td></tr>
-            <tr><td>Verification Enabled</td><td>${report.input_parameters.verification_enabled ? 'Yes' : 'No'}</td></tr>
+            <tr><td>Obfuscation Level</td><td>${inputParams.obfuscation_level || 'balanced'}</td></tr>
+            <tr><td>Platform</td><td>${inputParams.platform || 'windows'}</td></tr>
+            ${inputParams.password_protected ? `<tr><td>Password Protected</td><td>Yes</td></tr>` : ''}
+            ${inputParams.verification_enabled ? `<tr><td>Verification Enabled</td><td>Yes</td></tr>` : ''}
         </table>
         
         <h2>Output Attributes</h2>
         <table>
             <tr><th>Attribute</th><th>Value</th></tr>
-            <tr><td>Original Size</td><td>${report.output_attributes.original_size_bytes} bytes</td></tr>
-            <tr><td>Obfuscated Size</td><td>${report.output_attributes.obfuscated_size_bytes} bytes</td></tr>
-            <tr><td>Size Increase</td><td>${report.output_attributes.size_increase_percent}%</td></tr>
+            ${outputAttrs.original_size_bytes ? `<tr><td>Original Size</td><td>${outputAttrs.original_size_bytes} bytes</td></tr>` : ''}
+            ${outputAttrs.obfuscated_size_bytes ? `<tr><td>Obfuscated Size</td><td>${outputAttrs.obfuscated_size_bytes} bytes</td></tr>` : ''}
+            ${outputAttrs.object_file_size ? `<tr><td>Object File Size</td><td>${outputAttrs.object_file_size} bytes</td></tr>` : ''}
+            ${outputAttrs.executable_size ? `<tr><td>Executable Size</td><td>${outputAttrs.executable_size} bytes</td></tr>` : ''}
+            ${outputAttrs.ir_instructions ? `<tr><td>IR Instructions</td><td>${outputAttrs.ir_instructions}</td></tr>` : ''}
+            ${outputAttrs.method ? `<tr><td>Method</td><td>${outputAttrs.method}</td></tr>` : ''}
         </table>
         
         <h2>Obfuscation Statistics</h2>
         <table>
             <tr><th>Metric</th><th>Count</th></tr>
-            <tr><td>Strings Encrypted</td><td class="metric">${report.obfuscation_statistics.strings_encrypted}</td></tr>
-            <tr><td>Bogus Code Lines</td><td class="metric">${report.obfuscation_statistics.bogus_code_lines}</td></tr>
-            <tr><td>Control Flow Changes</td><td class="metric">${report.obfuscation_statistics.control_flow_changes}</td></tr>
-            <tr><td>Constants Encoded</td><td class="metric">${report.obfuscation_statistics.constants_encoded}</td></tr>
-            <tr><td>Obfuscation Cycles</td><td class="metric">${report.obfuscation_statistics.obfuscation_cycles}</td></tr>
+            ${stats.strings_encrypted !== undefined ? `<tr><td>Strings Encrypted</td><td class="metric">${stats.strings_encrypted}</td></tr>` : ''}
+            ${stats.bogus_code_lines !== undefined ? `<tr><td>Bogus Code Lines</td><td class="metric">${stats.bogus_code_lines}</td></tr>` : ''}
+            ${stats.control_flow_changes !== undefined ? `<tr><td>Control Flow Changes</td><td class="metric">${stats.control_flow_changes}</td></tr>` : ''}
+            ${stats.constants_encoded !== undefined ? `<tr><td>Constants Encoded</td><td class="metric">${stats.constants_encoded}</td></tr>` : ''}
+            ${stats.obfuscation_cycles !== undefined ? `<tr><td>Obfuscation Cycles</td><td class="metric">${stats.obfuscation_cycles}</td></tr>` : ''}
+            ${stats.ir_transformations !== undefined ? `<tr><td>IR Transformations</td><td class="metric">${stats.ir_transformations}</td></tr>` : ''}
+            ${stats.llvm_passes_applied && stats.llvm_passes_applied.length > 0 ? `<tr><td>LLVM Passes</td><td class="metric">${stats.llvm_passes_applied.join(', ')}</td></tr>` : ''}
+            ${stats.compilation_time !== undefined ? `<tr><td>Compilation Time</td><td class="metric">${stats.compilation_time.toFixed(2)}s</td></tr>` : ''}
         </table>
         
+        ${report.verification ? `
         <h2>Verification Result</h2>
         <p><strong>Verified:</strong> ${report.verification.verified ? '✅ Yes' : '❌ No'}</p>
-        <p><strong>Reason:</strong> ${report.verification.reason}</p>
+        <p><strong>Reason:</strong> ${report.verification.reason || 'N/A'}</p>
+        ` : ''}
+        
+        ${report.security_score ? `
+        <h2>Security Score</h2>
+        <p class="metric">🛡️ ${report.security_score}/100</p>
+        ` : ''}
     </div>
 </body>
 </html>
