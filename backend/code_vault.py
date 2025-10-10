@@ -6,7 +6,9 @@ Full binary encryption with password-based key derivation
 import os
 import hashlib
 import base64
-from typing import Tuple, Dict
+import secrets
+import string
+from typing import Tuple, Dict, Optional
 
 class CodeVault:
     """
@@ -17,7 +19,41 @@ class CodeVault:
         self.salt_size = 16
         self.iterations = 100000
     
-    def create_vault(self, source_code: str, password: str) -> Tuple[str, Dict]:
+    def generate_secure_password(self, length: int = 16) -> str:
+        """
+        Generate a secure random password
+        
+        Args:
+            length: Password length (default: 16)
+        
+        Returns:
+            Secure random password
+        """
+        # Character sets
+        uppercase = string.ascii_uppercase
+        lowercase = string.ascii_lowercase
+        digits = string.digits
+        special = "-_@#$%"
+        
+        # Ensure at least one of each type
+        password = [
+            secrets.choice(uppercase),
+            secrets.choice(lowercase),
+            secrets.choice(digits),
+            secrets.choice(special)
+        ]
+        
+        # Fill the rest
+        all_chars = uppercase + lowercase + digits + special
+        password += [secrets.choice(all_chars) for _ in range(length - 4)]
+        
+        # Shuffle
+        password_list = list(password)
+        secrets.SystemRandom().shuffle(password_list)
+        
+        return ''.join(password_list)
+    
+    def create_vault(self, source_code: str, password: Optional[str] = None) -> Tuple[str, Dict]:
         """
         Create password-protected code vault
         
@@ -28,11 +64,21 @@ class CodeVault:
         Returns:
             Tuple of (vault_code, statistics)
         """
+        # Auto-generate password if not provided
+        if password is None:
+            password = self.generate_secure_password()
+            auto_generated = True
+        else:
+            auto_generated = False
+        
         stats = {
             'encryption_algorithm': 'PBKDF2-HMAC-SHA256 + XOR',
             'key_derivation_iterations': self.iterations,
             'salt_size_bytes': self.salt_size,
-            'vault_created': True
+            'vault_created': True,
+            'password': password,  # Include password in stats
+            'password_auto_generated': auto_generated,
+            'password_length': len(password)
         }
         
         # Generate salt
@@ -258,6 +304,313 @@ int {function_name}_wrapper(int a, int b) {{
 }}
 """
         return stub
+    
+    def generate_password_report_html(self, stats: Dict, output_file: str = "vault_password_report.html") -> str:
+        """
+        Generate HTML report with password and vault information
+        
+        Args:
+            stats: Statistics from vault creation
+            output_file: Output HTML file path
+        
+        Returns:
+            Path to generated HTML file
+        """
+        import datetime
+        
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPECTRE Code Vault - Password Report</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }}
+        
+        .container {{
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }}
+        
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }}
+        
+        .header h1 {{
+            font-size: 32px;
+            margin-bottom: 10px;
+        }}
+        
+        .header p {{
+            font-size: 16px;
+            opacity: 0.9;
+        }}
+        
+        .content {{
+            padding: 40px;
+        }}
+        
+        .password-box {{
+            background: #f8f9fa;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }}
+        
+        .password-label {{
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }}
+        
+        .password-value {{
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            word-break: break-all;
+            user-select: all;
+        }}
+        
+        .copy-btn {{
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }}
+        
+        .copy-btn:hover {{
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }}
+        
+        .info-section {{
+            margin: 30px 0;
+        }}
+        
+        .info-section h2 {{
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }}
+        
+        .info-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }}
+        
+        .info-item {{
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }}
+        
+        .info-item-label {{
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }}
+        
+        .info-item-value {{
+            font-size: 18px;
+            color: #333;
+            font-weight: 600;
+        }}
+        
+        .warning-box {{
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }}
+        
+        .warning-box h3 {{
+            color: #856404;
+            margin-bottom: 10px;
+        }}
+        
+        .warning-box ul {{
+            margin-left: 20px;
+            color: #856404;
+        }}
+        
+        .warning-box li {{
+            margin: 8px 0;
+        }}
+        
+        .footer {{
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }}
+        
+        .status-badge {{
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }}
+        
+        .status-success {{
+            background: #d4edda;
+            color: #155724;
+        }}
+        
+        .status-auto {{
+            background: #d1ecf1;
+            color: #0c5460;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 SPECTRE Code Vault</h1>
+            <p>Password-Protected Executable Report</p>
+        </div>
+        
+        <div class="content">
+            <div class="password-box">
+                <div class="password-label">Your Vault Password</div>
+                <div class="password-value" id="password">{stats['password']}</div>
+                <button class="copy-btn" onclick="copyPassword()">📋 Copy Password</button>
+                {f'<span class="status-badge status-auto">AUTO-GENERATED</span>' if stats['password_auto_generated'] else ''}
+            </div>
+            
+            <div class="info-section">
+                <h2>Vault Information</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-item-label">Encryption Algorithm</div>
+                        <div class="info-item-value">{stats['encryption_algorithm']}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-item-label">Key Derivation Iterations</div>
+                        <div class="info-item-value">{stats['key_derivation_iterations']:,}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-item-label">Password Length</div>
+                        <div class="info-item-value">{stats['password_length']} characters</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-item-label">Salt Size</div>
+                        <div class="info-item-value">{stats['salt_size_bytes']} bytes</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-item-label">Vault Status</div>
+                        <div class="info-item-value">
+                            <span class="status-badge status-success">CREATED</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-item-label">Generated On</div>
+                        <div class="info-item-value">{current_time}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="warning-box">
+                <h3>⚠️ Important Security Instructions</h3>
+                <ul>
+                    <li><strong>Keep this password secure!</strong> Anyone with this password can run your protected software.</li>
+                    <li><strong>Distribute separately:</strong> Send the executable and password through different channels.</li>
+                    <li><strong>Store safely:</strong> Save this report in a secure location or password manager.</li>
+                    <li><strong>Don't share publicly:</strong> Never post this password in public forums or repositories.</li>
+                    <li><strong>Unique per user:</strong> Generate different passwords for different users/licenses.</li>
+                </ul>
+            </div>
+            
+            <div class="info-section">
+                <h2>How to Use</h2>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; line-height: 1.8;">
+                    <p><strong>Step 1:</strong> Compile the generated vault_protected.c file:</p>
+                    <code style="display: block; background: white; padding: 10px; margin: 10px 0; border-radius: 5px;">
+                        gcc vault_protected.c -o MyApp.exe
+                    </code>
+                    
+                    <p><strong>Step 2:</strong> Distribute MyApp.exe to your users</p>
+                    
+                    <p><strong>Step 3:</strong> Send this password to authorized users (via email, SMS, or license portal)</p>
+                    
+                    <p><strong>Step 4:</strong> Users run MyApp.exe and enter the password when prompted</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Generated by SPECTRE - Intelligent Software Protection Suite</p>
+            <p>© 2025 SPECTRE. All rights reserved.</p>
+        </div>
+    </div>
+    
+    <script>
+        function copyPassword() {{
+            const password = document.getElementById('password').textContent;
+            navigator.clipboard.writeText(password).then(() => {{
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                btn.style.background = '#28a745';
+                setTimeout(() => {{
+                    btn.textContent = originalText;
+                    btn.style.background = '#667eea';
+                }}, 2000);
+            }});
+        }}
+    </script>
+</body>
+</html>"""
+        
+        # Write to file
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        
+        return output_file
 
 
 # Example usage
@@ -282,21 +635,48 @@ int main() {
     
     vault = CodeVault()
     
-    print("\n🔐 Creating password-protected vault...")
-    vault_code, stats = vault.create_vault(test_code, "MySecretPassword123")
+    print("\n🔐 Creating password-protected vault with AUTO-GENERATED password...")
+    # Pass None to auto-generate password
+    vault_code, stats = vault.create_vault(test_code, password=None)
     
     print(f"\n📊 Vault Statistics:")
     print(f"   Encryption: {stats['encryption_algorithm']}")
-    print(f"   Iterations: {stats['key_derivation_iterations']}")
+    print(f"   Iterations: {stats['key_derivation_iterations']:,}")
     print(f"   Salt Size: {stats['salt_size_bytes']} bytes")
+    print(f"   Password: {stats['password']}")
+    print(f"   Password Auto-Generated: {stats['password_auto_generated']}")
+    print(f"   Password Length: {stats['password_length']} characters")
     print(f"   Vault Created: {stats['vault_created']}")
     
     print("\n✅ Code vault created successfully!")
+    
+    # Generate HTML report
+    print("\n📄 Generating HTML password report...")
+    report_file = vault.generate_password_report_html(stats)
+    print(f"✅ HTML report saved to: {report_file}")
+    print(f"   Open this file in your browser to view the password!")
+    
+    # Save vault code
+    with open("vault_protected.c", "w", encoding="utf-8") as f:
+        f.write(vault_code)
+    print(f"\n💾 Vault code saved to: vault_protected.c")
+    
     print("\n📝 Vault Code Preview:")
     print("-" * 70)
-    print(vault_code[:1000] + "...")
+    print(vault_code[:500] + "...")
     print("=" * 70)
     
     print("\n🔧 Creating runtime decryption stub...")
     stub = vault.create_runtime_decryption_stub("secret_function")
     print("✅ Stub created!")
+    
+    print("\n" + "=" * 70)
+    print("🎉 DEMO COMPLETE!")
+    print("=" * 70)
+    print(f"\n📋 Next Steps:")
+    print(f"   1. Open {report_file} in your browser")
+    print(f"   2. Copy the auto-generated password")
+    print(f"   3. Compile: gcc vault_protected.c -o vault_protected.exe")
+    print(f"   4. Run: vault_protected.exe")
+    print(f"   5. Enter the password when prompted")
+    print("=" * 70)

@@ -44,19 +44,23 @@ int main() {
     print("-" * 70)
     
     # Create code vault
-    print("\n🔒 Creating password-protected vault...")
+    print("\n🔒 Creating password-protected vault with AUTO-GENERATED password...")
     vault = CodeVault()
-    password = "MySecretPassword123"
+    
+    # Let Code Vault auto-generate a secure password
+    # Pass None or omit password parameter
     
     try:
-        vault_code, stats = vault.create_vault(test_code, password)
+        vault_code, stats = vault.create_vault(test_code, password=None)
         
         print("\n✅ Vault created successfully!")
         print(f"\n📊 Vault Statistics:")
         print(f"   Encryption Algorithm: {stats['encryption_algorithm']}")
         print(f"   Key Derivation Iterations: {stats['key_derivation_iterations']:,}")
         print(f"   Salt Size: {stats['salt_size_bytes']} bytes")
-        print(f"   Salt (Base64): {stats['salt'][:20]}...")
+        print(f"   🔑 PASSWORD: {stats['password']}")
+        print(f"   Password Auto-Generated: {stats['password_auto_generated']}")
+        print(f"   Password Length: {stats['password_length']} characters")
         print(f"   Vault Created: {stats['vault_created']}")
         
         print("\n📝 Vault Code Preview:")
@@ -117,6 +121,12 @@ int main() {
             status = "✅" if result else "❌"
             print(f"   {status} {check}")
         
+        # Generate HTML password report
+        print("\n📄 Generating HTML password report...")
+        report_file = vault.generate_password_report_html(stats)
+        print(f"✅ HTML report saved to: {report_file}")
+        print(f"   Open this file in your browser to view the password!")
+        
         # How to compile and test
         print("\n" + "=" * 70)
         print("📋 HOW TO TEST THE VAULT:")
@@ -128,7 +138,7 @@ int main() {
         print("   ./vault_protected.exe")
         
         print("\n3️⃣ When prompted, enter password:")
-        print(f"   Password: {password}")
+        print(f"   Password: {stats['password']}")
         
         print("\n4️⃣ Expected behavior:")
         print("   ✅ Password accepted")

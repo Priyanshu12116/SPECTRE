@@ -175,6 +175,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const result = await response.json();
             
+            // Debug: Log the entire response
+            console.log('DEBUG: Full backend response:', result);
+            console.log('DEBUG: result.vault_password =', result.vault_password);
+            console.log('DEBUG: result.report.vault_password =', result.report?.vault_password);
+            
             progressBar.style.width = '70%';
             addLog('Encrypting strings and constants...', 'info');
             
@@ -252,6 +257,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.obfuscatedCode = result.obfuscated_code || result.obfuscated_ir;
                 window.obfuscationReport = result.report;
                 
+                // Add vault password to report if available (check both locations)
+                const vaultPassword = result.vault_password || result.report.vault_password;
+                if (vaultPassword) {
+                    window.obfuscationReport.vault_password = vaultPassword;
+                    window.obfuscationReport.password_auto_generated = result.password_auto_generated || result.report.password_auto_generated || true;
+                    addLog(`🔑 Vault Password Generated: ${vaultPassword}`, 'success');
+                } else {
+                    console.log('DEBUG: No vault password found in result:', result);
+                }
+                
                 // Show download options
                 showObfuscationResults(result);
             } else {
@@ -314,6 +329,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const report = window.obfuscationReport;
         
+        // Debug: Check if password exists
+        console.log('DEBUG: Generating HTML report with data:', report);
+        console.log('DEBUG: vault_password =', report.vault_password);
+        
         // Handle both GCC and LLVM report formats
         const stats = report.obfuscation_statistics || report.statistics || {};
         const inputParams = report.input_parameters || report.input_params || {};
@@ -351,6 +370,28 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         
         ${report.llvm_specific && report.llvm_specific.sih_compliant ? '<div class="sih-badge">✅ SIH Compliant - Object File Obfuscation</div>' : ''}
+        
+        ${report.vault_password ? `
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin: 30px 0; text-align: center;">
+            <h2 style="color: white; margin-top: 0;">🔑 Code Vault Password</h2>
+            <div style="background: white; color: #667eea; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">Your Vault Password</div>
+                <div style="font-size: 28px; font-weight: bold; font-family: 'Courier New', monospace; word-break: break-all; user-select: all;">${report.vault_password}</div>
+                <div style="margin-top: 15px; padding: 10px; background: #d1ecf1; color: #0c5460; border-radius: 5px; font-size: 12px;">
+                    ${report.password_auto_generated ? '🤖 AUTO-GENERATED' : '✏️ CUSTOM'} | Length: ${report.vault_password.length} characters
+                </div>
+            </div>
+            <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; text-align: left; font-size: 14px;">
+                <strong>⚠️ Important:</strong>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>Keep this password secure!</li>
+                    <li>Users need this password to run the protected executable</li>
+                    <li>Distribute password separately from the executable</li>
+                    <li>Store in a password manager or secure location</li>
+                </ul>
+            </div>
+        </div>
+        ` : ''}
         
         <h2>Input Parameters</h2>
         <table>

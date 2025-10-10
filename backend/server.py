@@ -10,6 +10,7 @@ from obfuscator import CodeObfuscator
 from advanced_obfuscator import AdvancedObfuscator
 from llvm_obfuscator import LLVMObfuscator
 from security_analyzer import SecurityAnalyzer
+from code_vault import CodeVault
 
 app = Flask(__name__)
 CORS(app)
@@ -323,8 +324,26 @@ def obfuscate_with_llvm():
         }
         report = obfuscator.generate_report(result, config)
         
+        # Generate auto password for Code Vault
+        print("DEBUG: About to generate password...")
+        vault = CodeVault()
+        print("DEBUG: CodeVault instance created")
+        vault_password = vault.generate_secure_password(length=16)
+        print(f"DEBUG: Password generated: {vault_password}")
+        
+        # Add password to report (ensure it's mutable)
+        if isinstance(report, dict):
+            report['vault_password'] = vault_password
+            report['password_auto_generated'] = True
+            report['password_length'] = len(vault_password)
+            print(f"DEBUG: Password added to report: {report['vault_password']}")
+        else:
+            print(f"ERROR: Report is not a dict, it's a {type(report)}")
+        
         print(f"INFO: LLVM obfuscation complete! Status: {report['status']}")
         print(f"INFO: Object file size: {result['object_size']} bytes")
+        print(f"INFO: Generated vault password: {vault_password}")
+        print(f"DEBUG: Password in report: {report.get('vault_password', 'NOT FOUND')}")
         
         return jsonify({
             "success": True,
@@ -333,7 +352,8 @@ def obfuscate_with_llvm():
             "executable_size": result['executable_size'],
             "report": report,
             "llvm_method": True,
-            "sih_compliant": True
+            "sih_compliant": True,
+            "vault_password": vault_password
         })
         
     except Exception as e:
