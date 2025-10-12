@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results & History - SPECTRE Obfuscator</title>
+    <link rel="icon" href="../../assets/images/spectrelogo.jpg" type="image/jpeg">
+    <link rel="stylesheet" href="../css/style-home.css">
+    <link rel="stylesheet" href="../css/results.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="background-pattern"></div>
+    
+    <nav>
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="../../assets/images/spectrelogo.jpg" alt="SPECTRE Logo">
+                <span>SPECTRE</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="features.html">Features</a>
+                <a href="app.html">Tool</a>
+                <a href="results.html" class="active">Results</a>
+            </div>
+            <div id="nav-auth-container"></div>
+        </div>
+    </nav>
+
+    <div class="results-container">
+        <!-- Page Header -->
+        <header class="results-header">
+            <div class="header-content">
+                <h1>Obfuscation <span class="gradient-text">History</span></h1>
+                <p>View and manage your previous obfuscation sessions</p>
+            </div>
+            <div class="header-actions">
+                <button id="clearHistoryBtn" class="cta-button secondary">
+                    <i data-lucide="trash-2"></i>
+                    Clear History
+                </button>
+                <button id="exportHistoryBtn" class="cta-button">
+                    <i data-lucide="download"></i>
+                    Export All
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="stats-overview">
+            <div class="stat-box">
+                <i data-lucide="file-code"></i>
+                <div class="stat-info">
+                    <h3 id="totalFiles">0</h3>
+                    <p>Files Processed</p>
+                </div>
+            </div>
+            <div class="stat-box">
+                <i data-lucide="check-circle"></i>
+                <div class="stat-info">
+                    <h3 id="successCount">0</h3>
+                    <p>Successful</p>
+                </div>
+            </div>
+            <div class="stat-box">
+                <i data-lucide="alert-circle"></i>
+                <div class="stat-info">
+                    <h3 id="failedCount">0</h3>
+                    <p>Failed</p>
+                </div>
+            </div>
+            <div class="stat-box">
+                <i data-lucide="clock"></i>
+                <div class="stat-info">
+                    <h3 id="lastSession">Never</h3>
+                    <p>Last Session</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter & Search -->
+        <div class="filter-section">
+            <div class="search-box">
+                <i data-lucide="search"></i>
+                <input type="text" id="searchInput" placeholder="Search by filename...">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="success">Success</button>
+                <button class="filter-btn" data-filter="failed">Failed</button>
+            </div>
+        </div>
+
+        <!-- History Cards -->
+        <div class="history-grid" id="historyGrid">
+            <!-- Cards will be dynamically inserted here -->
+            <div class="empty-state">
+                <i data-lucide="inbox"></i>
+                <h3>No History Yet</h3>
+                <p>Start obfuscating files to see your history here</p>
+                <a href="app.html" class="cta-button">
+                    <i data-lucide="play"></i>
+                    Start Obfuscating
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-bottom">
+            <p>&copy; 2025 SPECTRE Obfuscator. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/home.js"></script>
+    <script src="../js/results.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

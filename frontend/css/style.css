@@ -95,14 +95,11 @@ main {
 }
 
 /* --- CARD-SPECIFIC GRID PLACEMENT --- */
-.dashboard, .file-upload { grid-column: span 1; }
+.file-upload { grid-column: span 2; }
 .obfuscation-parameters { grid-column: span 2; }
-.process-control, .report-generation { grid-column: span 1; }
-
-/* --- DASHBOARD CARD --- */
-.stats { display: flex; justify-content: space-around; text-align: center; }
-.stat-item h3 { font-size: 1rem; color: var(--text-color-secondary); font-weight: 400; margin-bottom: 0.5rem; }
-.stat-item p { font-size: 2rem; font-weight: 700; color: var(--accent-color-green); font-family: var(--font-mono); }
+.report-generation { grid-column: span 1; }
+.security-report { grid-column: span 2; }
+.code-review-report { grid-column: span 2; }
 
 /* --- FILE UPLOAD CARD --- */
 .drop-zone { border: 2px dashed var(--border-color); border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; transition: background-color 0.3s ease, border-color 0.3s ease; }
@@ -505,4 +502,88 @@ footer { padding: 4rem 2rem 2rem 2rem; text-align: center; color: var(--text-col
     header { padding: 3rem 0; }
     header h1 { font-size: 2rem; }
     .security-score-container { flex-direction: column; }
+}
+/* --- SCROLL ANIMATION FOR APP PAGE --- */
+.glass-card {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.glass-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Stagger animation for multiple cards */
+.glass-card.visible:nth-of-type(1) { transition-delay: 0s; }
+.glass-card.visible:nth-of-type(2) { transition-delay: 0.1s; }
+.glass-card.visible:nth-of-type(3) { transition-delay: 0.2s; }
+.glass-card.visible:nth-of-type(4) { transition-delay: 0.3s; }
+.glass-card.visible:nth-of-type(5) { transition-delay: 0.4s; }
+/* --- HERO/TITLE SECTION ANIMATIONS --- */
+.features-header,
+.page-title-section {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.features-header.visible,
+.page-title-section.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+/* --- OBFUSCATION LEVEL SELECTOR --- */
+.obfuscation-level-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.level-btn {
+    background: rgba(22, 22, 41, 0.5);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.level-btn:hover {
+    border-color: var(--accent-color-blue);
+    transform: translateY(-3px);
+}
+
+.level-btn.active {
+    border-color: var(--accent-color-blue);
+    background: rgba(0, 163, 255, 0.1);
+    box-shadow: 0 0 20px rgba(0, 163, 255, 0.3);
+}
+
+.level-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--accent-color-blue);
+    margin-bottom: 0.5rem;
+}
+
+.level-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color-primary);
+    margin-bottom: 0.25rem;
+}
+
+.level-desc {
+    font-size: 0.85rem;
+    color: var(--text-color-secondary);
+}
+
+@media (max-width: 768px) {
+    .obfuscation-level-selector {
+        grid-template-columns: 1fr;
+    }
 }

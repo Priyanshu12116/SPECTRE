@@ -21,15 +21,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         const alphabet = '01';
         const fontSize = 12;
         const columns = canvas.width / fontSize;
-        const rainDrops = Array.from({ length: columns }).fill(1);
+        const rainDrops = Array.from({ length: columns }).map(() => Math.floor(Math.random() * canvas.height / fontSize));
 
         function draw() {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#0a7a2cff';
+            ctx.fillStyle = '#00B0FF';
             ctx.font = fontSize + 'px monospace';
             for (let i = 0; i < rainDrops.length; i++) {
                 const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
@@ -81,7 +83,21 @@ document.addEventListener('DOMContentLoaded', () => {
             fileList.appendChild(fileItem);
         });
     }
+// --- OBFUSCATION LEVEL SELECTOR ---
+const levelBtns = document.querySelectorAll('.level-btn');
+let selectedLevel = 'source'; // Default
 
+levelBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        // Remove active from all
+        levelBtns.forEach(b => b.classList.remove('active'));
+        // Add active to clicked
+        btn.classList.add('active');
+        // Store selected level
+        selectedLevel = btn.dataset.level;
+        addLog(`Selected: ${btn.querySelector('.level-name').textContent}`, 'info');
+    });
+});
     // --- REAL OBFUSCATION PROCESS CONTROL ---
     if (startBtn) {
         startBtn.addEventListener('click', async () => {
@@ -101,28 +117,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function startObfuscation() {
+        const startTime = Date.now();
         startBtn.disabled = true;
         if (cancelBtn) cancelBtn.disabled = false;
         progressBar.style.width = '0%';
         if(logOutput) logOutput.innerHTML = '';
         
+        // Declare variables outside try block for error handling
+        let file, code, levelName, platform, compiler;
+        
         try {
-            const file = uploadedFiles[0];
-            const code = await file.text();
+            file = uploadedFiles[0];
+            code = await file.text();
             
             // Get obfuscation parameters
-            const level = document.getElementById('obfuscation-level')?.value || 5;
-            const levelName = level <= 3 ? 'quick' : level <= 7 ? 'balanced' : 'maximum';
-            const platform = document.getElementById('target-platform')?.value || 'windows';
-            let compiler = document.getElementById('compiler')?.value || 'llvm';  // Changed to 'let'
+            levelName = selectedLevel === 'source' ? 'quick' : selectedLevel === 'intermediate' ? 'balanced' : 'maximum';
+            platform = document.getElementById('target-platform')?.value || 'windows';
+            compiler = document.getElementById('compiler')?.value || 'llvm';  // Changed to 'let'
             
             // Determine if advanced mode should be used
-            const useAdvanced = level >= 8 || 
+            const useAdvanced = levelName === 'maximum'|| 
                               document.getElementById('code-virtualization')?.checked ||
                               document.getElementById('control-flow-flattening')?.checked;
             
             addLog('Starting obfuscation process...', 'info');
-            addLog(`Compiler: ${compiler.toUpperCase()} | Platform: ${platform} | Level: ${level}`, 'info');
+            addLog(`Compiler: ${compiler.toUpperCase()} | Platform: ${platform} | Level: ${levelName}`, 'info');
             progressBar.style.width = '10%';
             
             // Check LLVM status - Force LLVM only
@@ -133,6 +152,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!status.llvm_available) {
                     addLog('❌ LLVM not available. Please install LLVM/Clang.', 'error');
                     addLog('Obfuscation cannot proceed without LLVM.', 'error');
+                    
+                    // Save failed attempt to history
+                    const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
+                        type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
+                        message: entry.textContent
+                    }));
+                    
+                    window.saveToHistory(
+                        file.name,
+                        {
+                            compiler: compiler || 'llvm',
+                            platform: platform || 'windows',
+                            level: levelName || 'balanced',
+                            mode: 'simple'
+                        },
+                        'failed',
+                        allLogs,
+                        0,
+                        null
+                    );
+                    
+                    addLog('📝 Failed attempt saved to history', 'info');
                     finishProcess();
                     return;
                 } else {
@@ -142,6 +183,28 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (e) {
                 addLog('❌ Cannot connect to server. Please ensure server is running.', 'error');
                 addLog(`Error: ${e.message}`, 'error');
+                
+                // Save failed attempt to history
+                const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
+                    type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
+                    message: entry.textContent
+                }));
+                
+                window.saveToHistory(
+                    file.name,
+                    {
+                        compiler: compiler || 'llvm',
+                        platform: platform || 'windows',
+                        level: levelName || 'balanced',
+                        mode: 'simple'
+                    },
+                    'failed',
+                    allLogs,
+                    0,
+                    null
+                );
+                
+                addLog('📝 Failed attempt saved to history', 'info');
                 finishProcess();
                 return;
             }
@@ -193,6 +256,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.success) {
                 addLog('✅ Obfuscation complete!', 'success');
                 addLog(`Status: ${result.report.status}`, result.report.status === 'SUCCESS' ? 'success' : 'error');
+                // Save to history
+                const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
+                    type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
+                    message: entry.textContent
+                }));
+
+                window.saveToHistory(
+                    file.name,
+                    {
+                        compiler: compiler,
+                        platform: platform,
+                        level: levelName,
+                        mode: 'simple'
+                    },
+                    'success',
+                    allLogs,
+                    Math.floor((Date.now() - startTime) / 1000),
+                    result.output_file || result.obfuscated_code || null
+                );
                 
                 // Show LLVM-specific info if using LLVM
                 if (result.llvm_method) {
@@ -278,6 +360,34 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             addLog(`Error: ${error.message}`, 'error');
             progressBar.style.width = '0%';
+            
+            // Save failed attempt to history (with fallback values)
+            console.log('🔴 Obfuscation failed, attempting to save to history...'); // Debug
+            console.log('File:', file, 'Compiler:', compiler, 'Platform:', platform, 'Level:', levelName); // Debug
+            
+            if (file) {
+                const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
+                    type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
+                    message: entry.textContent
+                }));
+        
+                window.saveToHistory(
+                    file.name,
+                    {
+                        compiler: compiler || 'llvm',
+                        platform: platform || 'windows',
+                        level: levelName || 'balanced',
+                        mode: 'simple'
+                    },
+                    'failed',
+                    allLogs,
+                    0,
+                    null
+                );
+                console.log('✅ Failed case saved to history'); // Debug
+            } else {
+                console.log('❌ Cannot save failed case - file is undefined'); // Debug
+            }
         } finally {
             finishProcess();
         }
@@ -496,11 +606,79 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (result.success) {
                     displaySecurityReport(result.analysis);
                     addLog(`✅ Security analysis complete! Score: ${result.analysis.score}/100`, 'success');
+                    
+                    // Save security scan to history
+                    const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
+                        type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
+                        message: entry.textContent
+                    }));
+
+                    window.saveToHistory(
+                        file.name,
+                        {
+                            type: 'Security Scan',
+                            language: language,
+                            score: result.analysis.score,
+                            grade: result.analysis.grade
+                        },
+                        'success',
+                        allLogs,
+                        0,
+                        null
+                    );
                 } else {
                     addLog(`❌ Security analysis failed: ${result.error}`, 'error');
+                    
+                    // Save failed security scan to history
+                    const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
+                        type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
+                        message: entry.textContent
+                    }));
+
+                    window.saveToHistory(
+                        file.name,
+                        {
+                            type: 'Security Scan',
+                            language: language,
+                            score: 0,
+                            grade: 'F'
+                        },
+                        'failed',
+                        allLogs,
+                        0,
+                        null
+                    );
                 }
             } catch (error) {
                 addLog(`❌ Error: ${error.message}`, 'error');
+                
+                // Save failed security scan to history (error case)
+                console.log('🔴 Security scan failed, attempting to save...'); // Debug
+                console.log('File:', file, 'Language:', language); // Debug
+                
+                if (file && language) {
+                    const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
+                        type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
+                        message: entry.textContent
+                    }));
+
+                    window.saveToHistory(
+                        file.name,
+                        {
+                            type: 'Security Scan',
+                            language: language,
+                            score: 0,
+                            grade: 'F'
+                        },
+                        'failed',
+                        allLogs,
+                        0,
+                        null
+                    );
+                    console.log('✅ Failed security scan saved'); // Debug
+                } else {
+                    console.log('❌ Cannot save - file or language undefined'); // Debug
+                }
             } finally {
                 securityBtn.disabled = false;
                 securityBtn.textContent = '🛡️ Security Scan';
@@ -603,6 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const file = uploadedFiles[0];
             const code = await file.text();
+            const language = file.name.endsWith('.cpp') || file.name.endsWith('.cc') ? 'cpp' : 'c';
 
             try {
                 // Check server status before attempting review
@@ -611,6 +790,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 const review = await getCodeReviewFromServer(code);
                 reviewOutput.innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word;">${review}</pre>`;
                 addLog('Code analysis complete!', 'success');
+                // Save code review to history
+                const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
+                    type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
+                    message: entry.textContent
+                }));
+
+                window.saveToHistory(
+                    file.name,
+                    {
+                        type: 'Code Review',
+                        language: language
+                    },
+                    'success',
+                    allLogs,
+                    0,
+                    null
+                );
             } catch (error) {
                 const message = (error && error.message) ? error.message : 'Unknown error';
                 
@@ -631,6 +827,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
                 addLog(`Code review unavailable. Try Security Scan instead.`, 'error');
+                
+                // Save failed code review to history
+                console.log('🔴 Code review failed, attempting to save...'); // Debug
+                console.log('File:', file, 'Language:', language); // Debug
+                
+                if (file && language) {
+                    const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
+                        type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
+                        message: entry.textContent
+                    }));
+
+                    window.saveToHistory(
+                        file.name,
+                        {
+                            type: 'Code Review',
+                            language: language
+                        },
+                        'failed',
+                        allLogs,
+                        0,
+                        null
+                    );
+                    console.log('✅ Failed code review saved'); // Debug
+                } else {
+                    console.log('❌ Cannot save - file or language undefined'); // Debug
+                }
             } finally {
                 reviewBtn.disabled = false;
                 reviewBtn.textContent = 'Review Code';
@@ -760,4 +982,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // Make expert config available globally
     window.getExpertConfig = getExpertConfig;
 
+    // --- HISTORY MANAGEMENT ---
+    window.saveToHistory = function(filename, config, status, logs, duration, outputFile = null) {
+        const history = JSON.parse(localStorage.getItem('obfuscationHistory') || '[]');
+    
+        const historyItem = {
+            id: Date.now().toString(),
+            filename: filename,
+            timestamp: new Date().toISOString(),
+            status: status, // 'success' or 'failed'
+            config: config,
+            logs: logs,
+            duration: duration,
+            outputFile: outputFile
+        };
+        
+        console.log('💾 Saving to history:', historyItem); // Debug
+        
+        // Add to beginning of array (most recent first)
+        history.unshift(historyItem);
+        
+        // Keep only last 50 entries
+        if (history.length > 50) {
+            history.pop();
+        }
+        
+        localStorage.setItem('obfuscationHistory', JSON.stringify(history));
+        console.log('✅ History saved! Total items:', history.length); // Debug
+    };
 });

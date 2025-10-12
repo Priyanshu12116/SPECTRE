@@ -17,7 +17,8 @@
     </script>
     
     <!-- Background Pattern (matching home page) -->
-    <div class="background-pattern"></div>
+    <canvas id="matrix-bg"></canvas>
+
     
     <!-- Navigation (matching home page) -->
     <nav>
@@ -30,6 +31,7 @@
                 <a href="index.html">Home</a>
                 <a href="features.html">Features</a>
                 <a href="app.html" class="active">Tool</a>
+                <a href="results.html">Results</a>
             </div>
             <div id="nav-auth-container"></div>
         </div>
@@ -70,12 +72,28 @@
                     Configuration
                 </h2>
                 <div class="param-grid">
-                    <div class="param-item">
-                        <label for="obfuscation-level" class="label-with-icon">
+                    <div class="param-item full-width">
+                        <label class="label-with-icon">
                             <i data-lucide="sliders"></i>
                             Obfuscation Level
                         </label>
-                        <input type="range" id="obfuscation-level" name="obfuscation-level" min="1" max="10" value="5">
+                        <div class="obfuscation-level-selector">
+                            <button type="button" class="level-btn active" data-level="source">
+                                <div class="level-number">1</div>
+                                <div class="level-name">Source Code Obfuscation</div>
+                                <div class="level-desc">Basic protection • Fast</div>
+                            </button>
+                            <button type="button" class="level-btn" data-level="intermediate">
+                                <div class="level-number">2</div>
+                                <div class="level-name">Intermediate-Level Obfuscation</div>
+                                <div class="level-desc">Balanced protection • Moderate</div>
+                            </button>
+                            <button type="button" class="level-btn" data-level="binary">
+                                <div class="level-number">3</div>
+                                <div class="level-name">Binary-Level Obfuscation</div>
+                                <div class="level-desc">Maximum protection • Heavy</div>
+                            </button>
+                        </div>
                     </div>
                     <div class="param-item">
                         <label for="compiler" class="label-with-icon">
@@ -205,25 +223,6 @@
                 </div>
             </div>
 
-            <!-- Security Report (Hidden by default) -->
-            <div class="card security-report glass-card" id="securityReport" style="display: none;">
-                <h2 class="section-header">
-                    <i data-lucide="shield-alert"></i>
-                    Security Analysis Report
-                </h2>
-                <div class="security-score-container">
-                    <div class="security-score" id="securityScore">
-                        <div class="score-circle">
-                            <span id="scoreValue">--</span>
-                        </div>
-                        <div class="score-grade" id="scoreGrade">-</div>
-                    </div>
-                    <div class="security-summary" id="securitySummary"></div>
-                </div>
-                <div class="vulnerability-list" id="vulnerabilityList"></div>
-                <div class="recommendations" id="recommendations"></div>
-            </div>
-
             <!-- Logs & Output -->
             <div class="card report-generation glass-card">
                 <h2 class="section-header">
@@ -244,6 +243,26 @@
                     <p>Your code analysis report will appear here...</p>
                 </div>
             </div>
+            
+            <!-- Security Report (Hidden by default) -->
+            <div class="card security-report glass-card" id="securityReport" style="display: none;">
+                <h2 class="section-header">
+                    <i data-lucide="shield-alert"></i>
+                    Security Analysis Report
+                </h2>
+                <div class="security-score-container">
+                    <div class="security-score" id="securityScore">
+                        <div class="score-circle">
+                            <span id="scoreValue">--</span>
+                        </div>
+                        <div class="score-grade" id="scoreGrade">-</div>
+                    </div>
+                    <div class="security-summary" id="securitySummary"></div>
+                </div>
+                <div class="vulnerability-list" id="vulnerabilityList"></div>
+                <div class="recommendations" id="recommendations"></div>
+            </div>
+
         </main>
     </div>
     <!-- Footer -->

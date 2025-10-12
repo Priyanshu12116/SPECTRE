@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         camera.position.z = 5;
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
+        container.appendChild(renderer.domElement);
         renderer.setPixelRatio(window.devicePixelRatio);
         const ambientLight = new THREE.AmbientLight(0x00e5e5, 0.5);
         scene.add(ambientLight);

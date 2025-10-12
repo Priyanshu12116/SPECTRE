@@ -196,3 +196,16 @@ footer { background-color: transparent; padding: 2rem 5%;  }
 .hero-graphic { animation-delay: 0.5s; }
 .hero-content .hero-subtitle { animation-delay: 0.7s; }
 .hero-content .hero-buttons { animation-delay: 0.9s; }
+/* --- HERO/TITLE SECTION SCROLL ANIMATIONS --- */
+.features-header,
+.page-title-section {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.features-header.visible,
+.page-title-section.visible {
+    opacity: 1;
+    transform: translateY(0);
+}

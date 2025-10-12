@@ -26,13 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault(); // Stop the link from going anywhere yet
                 
                 // **NEW:** Store the intended destination before redirecting to login
-                sessionStorage.setItem('redirectAfterLogin', 'dashboard.html'); 
+                sessionStorage.setItem('redirectAfterLogin', 'app.html'); 
                 
                 // Now, send the user to the login page
                 window.location.href = 'login.html'; 
             });
         }
-        // If the user is logged in, the link works as normal (href="dashboard.html")
+        // If the user is logged in, the link works as normal (href="app.html")
     }
 
     // --- Globe animation logic ---
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, {
         threshold: 0.1
     });
-    const elementsToAnimate = document.querySelectorAll('.stats-card, .problem-section, .features-intro, .feature-card, .cta-section, .feature-detail-card');
+    const elementsToAnimate = document.querySelectorAll('.stats-card, .problem-section, .features-intro, .feature-card, .cta-section, .feature-detail-card, .glass-card, .features-header, .page-title-section, .results-header, .stat-box, .history-card');
     elementsToAnimate.forEach((el) => observer.observe(el));
     
     // --- Navbar Hide/Show on Scroll Logic (runs on all pages) ---
