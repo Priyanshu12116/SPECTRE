@@ -94,6 +94,28 @@ document.addEventListener('DOMContentLoaded', () => {
         loginMessage.textContent = 'Google Sign-In Successful! Accessing platform...';
         loginMessage.className = 'message success';
         
+        // Check if user exists in registeredUsers, if not add them
+        const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const existingUser = registeredUsers.find(u => u.email === userObject.email);
+        
+        if (!existingUser) {
+            // Add new Google user to registeredUsers
+            const newUser = {
+                fullname: userObject.name || userObject.email,
+                email: userObject.email,
+                username: userObject.name || userObject.email.split('@')[0],
+                authMethod: 'google',
+                profilePicture: userObject.picture || '',
+                createdAt: new Date().toISOString()
+            };
+            registeredUsers.push(newUser);
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+        } else if (!existingUser.createdAt) {
+            // Update existing user with createdAt if missing
+            existingUser.createdAt = new Date().toISOString();
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+        }
+        
         // Store user information
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('username', userObject.name || userObject.email);

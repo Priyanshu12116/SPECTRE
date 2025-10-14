@@ -1,8 +1,15 @@
 # 🛡️ SPECTRE: Stealthy Polymorphic Evasion & Countermeasure Toolkit for Resilient Executables
 
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![LLVM](https://img.shields.io/badge/LLVM-14.0+-orange.svg)](https://llvm.org/)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/Priyanshu12116/SPECTRE)
+
 ## 🎯 Overview
 
 **SPECTRE** is an enterprise-grade C/C++ code obfuscation platform with **52+ advanced protection techniques**. It combines LLVM IR-level transformations, object file obfuscation, polymorphic engines, and password-protected code vaults to provide military-grade protection against reverse engineering, static analysis, and dynamic analysis attacks.
+
+Built for **Smart India Hackathon 2025**, SPECTRE provides a comprehensive defense-in-depth approach with an intuitive web interface, user authentication, and detailed obfuscation analytics.
 
 ### 🏆 Key Highlights
 - ✅ **52+ Protection Techniques** - Most comprehensive open-source obfuscator
@@ -11,7 +18,7 @@
 - ✅ **Polymorphic Engine** - Code morphs on every execution
 - ✅ **Anti-Analysis Suite** - 20+ anti-debugging/VM/sandbox techniques
 - ✅ **Smart Performance** - AI-driven optimization balancing
-- ✅ **Web Interface** - Modern, user-friendly UI
+- ✅ **Modern Web Interface** - User authentication, profile management, history tracking
 - ✅ **Production Ready** - Docker support, WSGI server, enterprise-grade
 
 ### 🚀 Quick Start
@@ -187,6 +194,29 @@ docker-compose up --build
 - 💾 One-click downloads
 - 🎨 Consistent design language throughout
 
+**User Management:**
+- 👤 **User Authentication** - Secure login/signup system
+- 🔐 **Google OAuth Integration** - One-click Google sign-in
+- 📧 **Email & Password Auth** - Traditional authentication
+- 🖼️ **Profile Management** - Upload custom profile photos
+- ✏️ **Edit Profile** - Update username, email, and password
+- 📊 **User Dashboard** - Personal statistics and activity tracking
+
+**History & Analytics:**
+- 📜 **Obfuscation History** - Track all your obfuscation jobs
+- 🔍 **Search & Filter** - Find files by name or obfuscation level
+- 📈 **Statistics Dashboard** - Total files, success rate, last activity
+- 🎯 **Level Badges** - Color-coded badges (Source/Intermediate/Binary)
+- 💾 **Download History** - Re-download previous obfuscations
+- 🗑️ **History Management** - Delete individual items or clear all
+
+**Results Page:**
+- 📊 **Comprehensive Results** - View all obfuscation results
+- 🎨 **Visual Cards** - Beautiful card-based layout
+- 🔍 **Detailed Logs** - Expandable log viewer
+- ⚡ **Quick Actions** - Download, view, or delete results
+- 📈 **Success Tracking** - Visual status indicators
+
 ## 📁 Project Structure
 
 ```
@@ -215,17 +245,26 @@ SPECTRE/
 ├── 📂 frontend/                          # Modern web interface
 │   ├── pages/
 │   │   ├── index.html                    # Landing page with 3D globe
-│   │   ├── login.html                    # Authentication page with 3D shield
-│   │   ├── app.html                      # Main application (redesigned UI)
-│   │   └── features.html                 # Features showcase
+│   │   ├── login.html                    # Login page with Google OAuth
+│   │   ├── signup.html                   # User registration page
+│   │   ├── app.html                      # Main obfuscation tool
+│   │   ├── features.html                 # Features showcase
+│   │   ├── results.html                  # Results & history page
+│   │   └── profile.html                  # User profile & dashboard
 │   ├── css/
 │   │   ├── style.css                     # App styles
 │   │   ├── style-home.css                # Home page styles
-│   │   └── auth.css                      # Authentication styles
+│   │   ├── profile.css                   # Profile page styles
+│   │   ├── results.css                   # Results page styles
+│   │   └── nav-profile.css               # Navigation profile styles
 │   └── js/
-│       ├── script.js                     # Application logic
+│       ├── script.js                     # Main application logic
 │       ├── home.js                       # 3D globe animation
-│       └── auth.js                       # 3D shield & authentication
+│       ├── auth.js                       # Authentication logic
+│       ├── signup.js                     # Registration logic
+│       ├── profile.js                    # Profile management
+│       ├── results.js                    # Results page logic
+│       └── pdf-report.js                 # PDF report generation
 │
 ├── 📂 assets/                            # Static assets
 │   └── images/
@@ -464,7 +503,39 @@ See [examples/README.md](examples/README.md) for details.
 11. **Docker Support** - Production-ready containerization
 12. **Comprehensive Reports** - HTML with passwords, JSON for automation
 
-## 🎨 Recent UI/UX Improvements
+## 🎨 Recent Updates & Improvements
+
+### **v2.0 - Profile & User Management (Latest)**
+
+**New Features:**
+- 👤 **Complete User System** - Login, signup, and profile management
+- 🔐 **Google OAuth Integration** - One-click sign-in with Google
+- 🖼️ **Profile Photo Upload** - Custom avatars with Base64 storage
+- ✏️ **Profile Editing** - Update username, email, and password
+- 📊 **User Dashboard** - Personal statistics and activity tracking
+- 📜 **Obfuscation History** - Track all your obfuscation jobs with search/filter
+- 🎯 **Level Badges** - Color-coded badges (Cyan/Purple/Orange)
+- 📈 **Results Page** - Comprehensive results viewer with visual cards
+
+**Bug Fixes:**
+- ✅ Fixed username not updating in navbar after profile edit
+- ✅ Removed demo user auto-login from app.html
+- ✅ Fixed obfuscation history sync between results and profile pages
+- ✅ Fixed features page navbar missing container wrapper
+- ✅ Fixed dropdown showing all options expanded
+- ✅ Fixed level badges not visible in profile history
+- ✅ Added proper user data isolation (per-user history)
+- ✅ Improved session management
+
+**Technical Improvements:**
+- ✅ User-specific history filtering
+- ✅ Automatic page reload after profile updates
+- ✅ Enhanced CSS with proper dropdown styling
+- ✅ Better localStorage management
+- ✅ Consistent navbar across all pages
+- ✅ Added username and level to history items
+
+### **v1.5 - UI/UX Enhancements**
 
 **Landing Page:**
 - 🌍 Interactive 3D globe with real-world map texture
@@ -485,7 +556,7 @@ See [examples/README.md](examples/README.md) for details.
 - 🎨 Consistent design language across all pages
 - 💾 Streamlined download experience
 
-**Technical Improvements:**
+**Code Quality:**
 - ✅ Fixed all 40+ linting issues
 - ✅ Moved inline styles to external CSS
 - ✅ Added Safari compatibility (-webkit-backdrop-filter)
@@ -525,21 +596,26 @@ This project is part of Smart India Hackathon 2025.
 
 Smart India Hackathon 2025 - National Technical Research Organisation
 
-## 🆘 Support
+## 📚 Documentation
 
-**Documentation:**
+**Core Documentation:**
 - 📖 [Complete Usage Guide](docs/HOW_TO_RUN.md)
 - 🔧 [LLVM Installation](docs/LLVM_INSTALLATION_GUIDE.md)
 - 📚 [All Documentation](docs/DOCUMENTATION.md)
+- ⚡ [Quick Reference](docs/QUICK_REFERENCE.md)
+- 🚀 [Production Setup](docs/PRODUCTION_SERVER_UPGRADE.md)
+
+**Feature Guides:**
+- 🔐 [Google OAuth Setup](frontend/GOOGLE_AUTH_SETUP.md)
+- 👤 [Profile Page Guide](frontend/PROFILE_PAGE_GUIDE.md)
+- 🐛 [Bug Fixes Summary](BUG_FIXES_SUMMARY.md)
+- 🧹 [Cleanup Summary](CLEANUP_SUMMARY.md)
 
 **Examples:**
 - 💡 [Example Programs](examples/README.md)
 - 🎯 Simple, Intermediate, and Advanced examples included
 
-**Quick Reference:**
-- ⚡ [Command Reference](docs/QUICK_REFERENCE.md)
-- 🐳 [Docker Deployment](Dockerfile)
-- 🚀 [Production Setup](docs/PRODUCTION_SERVER_UPGRADE.md)
+## 🆘 Support
 
 ---
 

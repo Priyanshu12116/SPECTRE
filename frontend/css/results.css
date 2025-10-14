@@ -46,6 +46,7 @@
 .stat-box {
     background: rgba(22, 22, 41, 0.5);
     border: 1px solid var(--border-color);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     border-radius: 12px;
     padding: 1.5rem;
@@ -159,6 +160,7 @@
 .history-card {
     background: rgba(22, 22, 41, 0.5);
     border: 1px solid var(--border-color);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     border-radius: 12px;
     overflow: hidden;

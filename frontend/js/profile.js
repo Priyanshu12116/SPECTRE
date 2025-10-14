@@ -22,9 +22,29 @@ function loadUserProfile() {
     // Get full name from registered users or use username
     let fullName = username;
     const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const currentUser = registeredUsers.find(u => u.username === username || u.email === email);
-    if (currentUser && currentUser.fullname) {
-        fullName = currentUser.fullname;
+    let currentUser = registeredUsers.find(u => u.username === username || u.email === email);
+    
+    // If user doesn't exist in registeredUsers, create entry
+    if (!currentUser) {
+        currentUser = {
+            fullname: fullName,
+            email: email,
+            username: username,
+            authMethod: authMethod,
+            profilePicture: profilePicture || '',
+            createdAt: new Date().toISOString()
+        };
+        registeredUsers.push(currentUser);
+        localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+    } else {
+        // If user exists but doesn't have createdAt, add it now
+        if (!currentUser.createdAt) {
+            currentUser.createdAt = new Date().toISOString();
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+        }
+        if (currentUser.fullname) {
+            fullName = currentUser.fullname;
+        }
     }
 
     // Update profile information

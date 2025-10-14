@@ -65,20 +65,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const statusClass = item.status === 'success' ? 'success' : 'failed';
         const statusIcon = item.status === 'success' ? 'check-circle' : 'x-circle';
+        
+        // Defensive checks for config
+        const config = item.config || {};
+        const configType = config.type || 'Obfuscation';
+        const compiler = config.compiler || 'N/A';
+        const level = config.level || 'N/A';
+        const platform = config.platform || 'N/A';
+        const mode = config.mode || 'Simple';
+        const language = config.language || 'N/A';
+        const score = config.score || 'N/A';
+        const grade = config.grade || 'N/A';
 
         card.innerHTML = `
             <div class="card-header-section">
                 <div class="card-title-section">
                     <h3>
-                        <i data-lucide="${item.config.type === 'Security Scan' ? 'shield-check' : item.config.type === 'Code Review' ? 'file-search' : 'file-code'}"></i>
+                        <i data-lucide="${configType === 'Security Scan' ? 'shield-check' : configType === 'Code Review' ? 'file-search' : 'file-code'}"></i>
                         ${item.filename}
                     </h3>
                     <div style="font-size: 0.85rem; color: var(--accent-color-blue); margin-top: 0.25rem;">
-                        ${item.config.type || 'Obfuscation'}
+                        ${configType}
                     </div>
                     <div class="card-meta">
                         <span><i data-lucide="clock"></i> ${formatRelativeTime(new Date(item.timestamp))}</span>
-                        <span><i data-lucide="cpu"></i> ${item.config.compiler ? item.config.compiler.toUpperCase() : (item.config.type || 'N/A')}</span>
+                        <span><i data-lucide="cpu"></i> ${compiler !== 'N/A' ? compiler.toUpperCase() : configType}</span>
                     </div>
                 </div>
                 <span class="status-badge ${statusClass}">
@@ -88,22 +99,22 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <div class="card-summary">
-                ${item.config.type === 'Security Scan' ? `
+                ${configType === 'Security Scan' ? `
                     <div class="summary-item">
-                        <h4>${item.config.score || 'N/A'}</h4>
+                        <h4>${score}</h4>
                         <p>Score</p>
                     </div>
                     <div class="summary-item">
-                        <h4>${item.config.grade || 'N/A'}</h4>
+                        <h4>${grade}</h4>
                         <p>Grade</p>
                     </div>
                     <div class="summary-item">
-                        <h4>${item.config.language || 'N/A'}</h4>
+                        <h4>${language}</h4>
                         <p>Language</p>
                     </div>
-                ` : item.config.type === 'Code Review' ? `
+                ` : configType === 'Code Review' ? `
                     <div class="summary-item">
-                        <h4>${item.config.language || 'N/A'}</h4>
+                        <h4>${language}</h4>
                         <p>Language</p>
                     </div>
                     <div class="summary-item">
@@ -116,11 +127,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 ` : `
                     <div class="summary-item">
-                        <h4>${item.config.level || 'N/A'}</h4>
+                        <h4>${level}</h4>
                         <p>Level</p>
                     </div>
                     <div class="summary-item">
-                        <h4>${item.config.platform || 'N/A'}</h4>
+                        <h4>${platform}</h4>
                         <p>Platform</p>
                     </div>
                     <div class="summary-item">
@@ -136,19 +147,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="config-grid">
                         <div class="config-item">
                             <span>Compiler</span>
-                            <span>${item.config.compiler || 'N/A'}</span>
+                            <span>${compiler}</span>
                         </div>
                         <div class="config-item">
                             <span>Platform</span>
-                            <span>${item.config.platform || 'N/A'}</span>
+                            <span>${platform}</span>
                         </div>
                         <div class="config-item">
                             <span>Level</span>
-                            <span>${item.config.level || 'N/A'}</span>
+                            <span>${level}</span>
                         </div>
                         <div class="config-item">
                             <span>Mode</span>
-                            <span>${item.config.mode || 'Simple'}</span>
+                            <span>${mode}</span>
                         </div>
                     </div>
                 </div>
@@ -156,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="details-section">
                     <h4><i data-lucide="terminal"></i> Process Logs</h4>
                     <div class="log-output">
-                        ${item.logs.map(log => `<div class="log-entry ${log.type}">${log.message}</div>`).join('')}
+                        ${(item.logs || []).map(log => `<div class="log-entry ${log.type || 'info'}">${log.message || ''}</div>`).join('')}
                     </div>
                 </div>
 
