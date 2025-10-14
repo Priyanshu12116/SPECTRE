@@ -36,11 +36,16 @@ class AdvancedObfuscator:
             'functions_virtualized': 0,
             'anti_debug_checks': 0,
             'opaque_predicates': 0,
-            'data_structures_scrambled': 0
+            'data_structures_scrambled': 0,
+            'fake_loops_inserted': 0,
+            'vm_detection_checks': 0,
+            'sandbox_detection_checks': 0,
+            'timing_checks': 0
         }
         self.variable_map = {}
         self.function_map = {}
         self.encryption_key = None
+        self.compilation_time = 0
         
     # ==================== ENCRYPTION UTILITIES ====================
     
@@ -579,25 +584,94 @@ char* _spectre_xor_decrypt(const char* encrypted, uint32_t key) {
     # ==================== REPORTING ====================
     
     def generate_report(self, original_code, obfuscated_code, verification_result, config):
-        """Generate comprehensive obfuscation report"""
+        """Generate comprehensive obfuscation report with detailed metrics"""
+        
+        # Calculate detailed metrics
+        original_lines = len(original_code.split('\n'))
+        obfuscated_lines = len(obfuscated_code.split('\n'))
+        
+        # Calculate total anti-analysis protections
+        total_protections = (
+            self.obfuscation_stats['anti_debug_checks'] +
+            self.obfuscation_stats['vm_detection_checks'] +
+            self.obfuscation_stats['sandbox_detection_checks'] +
+            self.obfuscation_stats['timing_checks']
+        )
+        
         report = {
             'timestamp': datetime.now().isoformat(),
+            'compiler': 'GCC/G++ Advanced',
+            'obfuscation_method': 'Multi-Layer Source Transformation',
+            
+            # a. Input parameters - all logged
             'input_parameters': {
                 'obfuscation_level': config.get('level', 'balanced'),
                 'target_platform': config.get('platform', 'windows'),
                 'password_protected': config.get('password_protected', False),
-                'verification_enabled': config.get('verify', True)
+                'verification_enabled': config.get('verify', True),
+                'compiler': 'GCC/G++ Advanced',
+                'timestamp_submitted': datetime.now().isoformat(),
+                'protection_layers': 6  # Number of protection layers applied
             },
+            
+            # b. Output file attributes - size, method, etc.
             'output_attributes': {
                 'original_size_bytes': len(original_code),
                 'obfuscated_size_bytes': len(obfuscated_code),
                 'size_increase_percent': round(
                     ((len(obfuscated_code) - len(original_code)) / len(original_code)) * 100, 2
                 ),
-                'original_lines': len(original_code.split('\n')),
-                'obfuscated_lines': len(obfuscated_code.split('\n'))
+                'original_lines': original_lines,
+                'obfuscated_lines': obfuscated_lines,
+                'lines_added': obfuscated_lines - original_lines,
+                'obfuscation_method': 'Multi-Layer Source Transformation',
+                'encryption_algorithm': 'AES-256-CBC',
+                'control_flow_method': 'Switch-based flattening',
+                'compilation_time': self.compilation_time
             },
-            'obfuscation_statistics': self.obfuscation_stats.copy(),
+            
+            # c, d, e, f. Detailed obfuscation statistics
+            'obfuscation_statistics': {
+                # d. Number of obfuscation cycles
+                'obfuscation_cycles': self.obfuscation_stats['obfuscation_cycles'],
+                
+                # e. String obfuscation/encryption
+                'strings_encrypted': self.obfuscation_stats['strings_encrypted'],
+                
+                # c. Bogus code information
+                'bogus_code_lines': self.obfuscation_stats['bogus_code_lines'],
+                'bogus_code_percentage': round(
+                    (self.obfuscation_stats['bogus_code_lines'] / max(obfuscated_lines, 1)) * 100, 2
+                ),
+                
+                # f. Fake loops inserted
+                'fake_loops_inserted': self.obfuscation_stats['fake_loops_inserted'],
+                
+                # Additional detailed metrics
+                'control_flow_changes': self.obfuscation_stats['control_flow_changes'],
+                'constants_encoded': self.obfuscation_stats['constants_encoded'],
+                'variables_renamed': self.obfuscation_stats['variables_renamed'],
+                'functions_virtualized': self.obfuscation_stats['functions_virtualized'],
+                'opaque_predicates': self.obfuscation_stats['opaque_predicates'],
+                'data_structures_scrambled': self.obfuscation_stats['data_structures_scrambled'],
+                
+                # Anti-analysis protection details
+                'anti_debug_checks': self.obfuscation_stats['anti_debug_checks'],
+                'vm_detection_checks': self.obfuscation_stats['vm_detection_checks'],
+                'sandbox_detection_checks': self.obfuscation_stats['sandbox_detection_checks'],
+                'timing_checks': self.obfuscation_stats['timing_checks'],
+                'total_protections': total_protections,
+                
+                # Summary
+                'total_transformations': sum([
+                    self.obfuscation_stats['strings_encrypted'],
+                    self.obfuscation_stats['bogus_code_lines'],
+                    self.obfuscation_stats['control_flow_changes'],
+                    self.obfuscation_stats['constants_encoded'],
+                    self.obfuscation_stats['variables_renamed']
+                ])
+            },
+            
             'protection_layers': {
                 'string_encryption': 'AES-256-CBC',
                 'control_flow': 'Switch-based flattening',
@@ -606,6 +680,7 @@ char* _spectre_xor_decrypt(const char* encrypted, uint32_t key) {
                 'opaque_predicates': 'Always-true conditions',
                 'data_scrambling': 'Structure reordering'
             },
+            
             'verification': verification_result,
             'status': 'SUCCESS' if verification_result.get('verified', False) else 'FAILED',
             'security_score': self._calculate_security_score()

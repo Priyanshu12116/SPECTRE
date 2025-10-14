@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compile LLVM IR - SPECTRE</title>
+    <link rel="stylesheet" href="../css/style-home.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/nav-profile.css">
+    <link rel="icon" href="../../assets/images/spectrelogo.jpg" type="image/jpeg">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .compile-container {
+            max-width: 900px;
+            margin: 100px auto 50px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .compile-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .compile-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .compile-header p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
+        .file-upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .file-upload-area:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .file-upload-area.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .password-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .compile-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .compile-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .compile-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: rgba(46, 213, 115, 0.1);
+            border: 1px solid rgba(46, 213, 115, 0.3);
+            color: #2ed573;
+        }
+
+        .status-message.error {
+            background: rgba(255, 71, 87, 0.1);
+            border: 1px solid rgba(255, 71, 87, 0.3);
+            color: #ff4757;
+        }
+
+        .status-message.info {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            color: #667eea;
+        }
+
+        .file-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .file-info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-box {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+        }
+
+        .info-box h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+
+        .info-box ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .info-box li {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Pattern -->
+    <canvas id="matrix-bg"></canvas>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="../../assets/images/spectrelogo.jpg" alt="SPECTRE Logo">
+                <span>SPECTRE</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="features.html">Features</a>
+                <a href="app.html">Tool</a>
+                <a href="compile.html" class="active">Compile IR</a>
+                <a href="results.html">Results</a>
+            </div>
+            <div id="nav-auth-container"></div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="compile-container">
+        <div class="compile-header">
+            <h1>🔧 Compile LLVM IR</h1>
+            <p>Upload your .ll file and get the executable output</p>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="upload-section">
+            <div class="file-upload-area" id="uploadArea">
+                <div class="upload-icon">
+                    <i data-lucide="upload-cloud"></i>
+                </div>
+                <h3>Drop your .ll file here or click to browse</h3>
+                <p>Supported: LLVM IR (.ll) files</p>
+                <input type="file" id="fileInput" class="file-input" accept=".ll">
+            </div>
+            
+            <div class="file-info" id="fileInfo">
+                <div class="file-info-item">
+                    <span><strong>File:</strong></span>
+                    <span id="fileName">-</span>
+                </div>
+                <div class="file-info-item">
+                    <span><strong>Size:</strong></span>
+                    <span id="fileSize">-</span>
+                </div>
+                <div class="file-info-item">
+                    <span><strong>Type:</strong></span>
+                    <span id="fileType">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Section -->
+        <div class="password-section">
+            <div class="input-group">
+                <label for="vaultPassword">
+                    <i data-lucide="lock"></i>
+                    Code Vault Password
+                </label>
+                <input 
+                    type="password" 
+                    id="vaultPassword" 
+                    placeholder="Enter your Code Vault password"
+                    required
+                >
+            </div>
+
+            <div class="input-group">
+                <label for="languageType">
+                    <i data-lucide="code"></i>
+                    Language Type
+                </label>
+                <select id="languageType">
+                    <option value="cpp">C++</option>
+                    <option value="c">C</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Compile Button -->
+        <button class="compile-btn" id="compileBtn" disabled>
+            <i data-lucide="play-circle"></i>
+            Compile to Executable
+        </button>
+
+        <!-- Status Message -->
+        <div class="status-message" id="statusMessage"></div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <h3>ℹ️ How It Works</h3>
+            <ul>
+                <li><strong>Upload:</strong> Select your LLVM IR (.ll) file</li>
+                <li><strong>Authenticate:</strong> Enter your Code Vault password (same one used during obfuscation)</li>
+                <li><strong>Compile:</strong> Click the button to compile the IR to an executable</li>
+                <li><strong>Download:</strong> The executable will be automatically downloaded</li>
+            </ul>
+            <p style="margin-top: 15px; color: rgba(255, 255, 255, 0.6);">
+                <strong>Note:</strong> This feature allows you to distribute .ll files to users who can then compile them to executables using their Code Vault password.
+            </p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/home.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const compileBtn = document.getElementById('compileBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        let selectedFile = null;
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.name.endsWith('.ll')) {
+                showStatus('Please select a valid .ll file', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            
+            // Show file info
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('fileType').textContent = 'LLVM IR';
+            fileInfo.classList.add('show');
+            
+            // Enable compile button
+            compileBtn.disabled = false;
+            
+            showStatus('File loaded successfully! Enter your password and click compile.', 'success');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.style.display = 'block';
+        }
+
+        // Compile button click
+        compileBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                showStatus('Please select a .ll file first', 'error');
+                return;
+            }
+
+            const password = document.getElementById('vaultPassword').value;
+            if (!password) {
+                showStatus('Please enter your Code Vault password', 'error');
+                return;
+            }
+
+            const languageType = document.getElementById('languageType').value;
+            const isCpp = languageType === 'cpp';
+
+            // Disable button and show loading
+            compileBtn.disabled = true;
+            compileBtn.innerHTML = '<i data-lucide="loader"></i> Compiling...';
+            lucide.createIcons();
+            showStatus('Compiling LLVM IR to executable...', 'info');
+
+            try {
+                // First, check if server is running
+                try {
+                    console.log('Checking server status...');
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                    
+                    const statusCheck = await fetch('http://127.0.0.1:5000/api/status', {
+                        method: 'GET',
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!statusCheck.ok) {
+                        throw new Error('Server is not responding correctly');
+                    }
+                    
+                    console.log('✅ Server is running');
+                } catch (statusError) {
+                    console.error('Server check failed:', statusError);
+                    showStatus('❌ Cannot connect to server! Make sure the backend is running (python start_server.py)', 'error');
+                    return;
+                }
+
+                // Read file content
+                const fileContent = await readFileAsText(selectedFile);
+                
+                console.log('Sending compilation request...');
+                console.log('File size:', fileContent.length, 'bytes');
+
+                // Send to backend
+                const response = await fetch('http://127.0.0.1:5000/api/llvm/compile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        llvm_ir: fileContent,
+                        password: password,
+                        is_cpp: isCpp
+                    })
+                });
+
+                console.log('Response status:', response.status);
+
+                if (response.ok) {
+                    // Download the executable
+                    const blob = await response.blob();
+                    console.log('Executable size:', blob.size, 'bytes');
+                    
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'obfuscated_program.exe';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    showStatus('✅ Compilation successful! Executable downloaded.', 'success');
+                } else {
+                    const error = await response.json();
+                    console.error('Compilation error:', error);
+                    showStatus(`❌ Compilation failed: ${error.error || 'Unknown error'}`, 'error');
+                    if (error.details) {
+                        console.error('Details:', error.details);
+                    }
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    showStatus('❌ Cannot connect to server! Make sure backend is running on http://127.0.0.1:5000', 'error');
+                } else {
+                    showStatus(`❌ Error: ${error.message}`, 'error');
+                }
+            } finally {
+                // Re-enable button
+                compileBtn.disabled = false;
+                compileBtn.innerHTML = '<i data-lucide="play-circle"></i> Compile to Executable';
+                lucide.createIcons();
+            }
+        });
+
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(e);
+                reader.readAsText(file);
+            });
+        }
+    </script>
+</body>
+</html>

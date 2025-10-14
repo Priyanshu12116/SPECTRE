@@ -256,63 +256,11 @@ levelBtns.forEach(btn => {
             if (result.success) {
                 addLog('✅ Obfuscation complete!', 'success');
                 addLog(`Status: ${result.report.status}`, result.report.status === 'SUCCESS' ? 'success' : 'error');
-                // Save to history with detailed metrics
+                // Save to history
                 const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
                     type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
                     message: entry.textContent
                 }));
-
-                // Extract detailed obfuscation metrics from report
-                const detailedMetrics = {
-                    // Input parameters (SIH requirement a)
-                    inputParams: {
-                        compiler: compiler,
-                        platform: platform,
-                        level: levelName,
-                        mode: 'simple',
-                        originalFileSize: file.size,
-                        originalFileName: file.name
-                    },
-                    
-                    // Output attributes (SIH requirement b)
-                    outputAttributes: {
-                        objectFileSize: result.object_file_size || 0,
-                        executableSize: result.executable_size || 0,
-                        method: result.llvm_method ? 'LLVM IR → Object File → Binary' : 'GCC Direct',
-                        irInstructions: result.report?.output_attributes?.ir_instructions || 0
-                    },
-                    
-                    // Obfuscation statistics (SIH requirements c, d, e, f)
-                    statistics: {
-                        // c. Bogus code information
-                        bogusCodeLines: stats?.bogus_code_lines || 0,
-                        bogusCodePercentage: stats?.bogus_code_lines ? 
-                            Math.round((stats.bogus_code_lines / (code.split('\n').length + stats.bogus_code_lines)) * 100) : 0,
-                        
-                        // d. Obfuscation cycles
-                        obfuscationCycles: stats?.obfuscation_cycles || stats?.llvm_passes_applied?.length || 1,
-                        llvmPassesApplied: stats?.llvm_passes_applied || [],
-                        
-                        // e. String obfuscation/encryption
-                        stringsEncrypted: stats?.strings_encrypted || 0,
-                        stringsObfuscated: stats?.strings_obfuscated || 0,
-                        
-                        // f. Fake loops inserted
-                        fakeLoopsInserted: stats?.fake_loops || stats?.opaque_predicates || 0,
-                        opaquePredicates: stats?.opaque_predicates || 0,
-                        
-                        // Additional metrics
-                        controlFlowChanges: stats?.control_flow_changes || 0,
-                        variablesRenamed: stats?.variables_renamed || 0,
-                        antiDebugChecks: stats?.anti_debug_checks || 0,
-                        irTransformations: stats?.ir_transformations || 0
-                    },
-                    
-                    // Security and verification
-                    securityScore: result.report?.security_score || 0,
-                    verified: result.report?.verification?.verified || false,
-                    compilationTime: stats?.compilation_time || Math.floor((Date.now() - startTime) / 1000)
-                };
 
                 window.saveToHistory(
                     file.name,
@@ -325,8 +273,7 @@ levelBtns.forEach(btn => {
                     'success',
                     allLogs,
                     Math.floor((Date.now() - startTime) / 1000),
-                    result.output_file || result.obfuscated_code || null,
-                    detailedMetrics
+                    result.output_file || result.obfuscated_code || null
                 );
                 
                 // Show LLVM-specific info if using LLVM
@@ -449,10 +396,28 @@ levelBtns.forEach(btn => {
     }
     
     function showObfuscationResults(result) {
+        // Get vault password from result
+        const vaultPassword = window.obfuscationReport?.vault_password || result.vault_password || result.report?.vault_password;
+        
         // Create download buttons for obfuscated code and report
         const reportActions = document.querySelector('.report-actions');
         if (reportActions) {
-            reportActions.innerHTML = `
+            let passwordHTML = '';
+            if (vaultPassword) {
+                passwordHTML = `
+                    <div style="background: rgba(102, 126, 234, 0.1); border: 2px solid #667eea; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-top: 0;">🔑 Code Vault Password</h3>
+                        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 5px; margin: 10px 0;">
+                            <code style="font-size: 1.2em; color: #2ed573; font-weight: bold;">${vaultPassword}</code>
+                        </div>
+                        <p style="color: rgba(255,255,255,0.8); margin-bottom: 0;">
+                            ⚠️ <strong>IMPORTANT:</strong> Save this password! You'll need it to compile the .ll file to .exe
+                        </p>
+                    </div>
+                `;
+            }
+            
+            reportActions.innerHTML = passwordHTML + `
                 <button onclick="downloadObfuscatedCode()">Download Obfuscated Code</button>
                 <button onclick="downloadReport()">Download Report (JSON)</button>
                 <button onclick="downloadReportPDF()">Download Report (PDF)</button>
@@ -467,13 +432,40 @@ levelBtns.forEach(btn => {
             return;
         }
         
+        // Determine if this is LLVM IR or source code
+        // Check for LLVM IR markers (including password hash comment)
+        const isLLVMIR = window.obfuscatedCode.includes('; ModuleID') || 
+                         window.obfuscatedCode.includes('target datalayout') ||
+                         window.obfuscatedCode.includes('target triple') ||
+                         window.obfuscatedCode.includes('; SPECTRE_PASSWORD_HASH');
+        
+        console.log('Download check:', {
+            isLLVMIR: isLLVMIR,
+            startsWithModuleID: window.obfuscatedCode.startsWith('; ModuleID'),
+            hasPasswordHash: window.obfuscatedCode.includes('; SPECTRE_PASSWORD_HASH'),
+            firstLine: window.obfuscatedCode.split('\n')[0]
+        });
+        
         // Preserve original file extension (.c, .cpp, .cc, etc.)
         let filename = 'obfuscated_code.c';
         if (window.originalFilename) {
             const ext = window.originalFilename.substring(window.originalFilename.lastIndexOf('.'));
             const baseName = window.originalFilename.substring(0, window.originalFilename.lastIndexOf('.'));
-            filename = `${baseName}_obfuscated${ext}`;
+            
+            // If LLVM IR, use .ll extension; otherwise use original extension
+            if (isLLVMIR) {
+                filename = `${baseName}_obfuscated.ll`;
+                console.log('Using .ll extension for LLVM IR');
+            } else {
+                filename = `${baseName}_obfuscated${ext}`;
+                console.log('Using original extension:', ext);
+            }
+        } else if (isLLVMIR) {
+            filename = 'obfuscated_code.ll';
+            console.log('Using default .ll filename');
         }
+        
+        console.log('Downloading as:', filename);
         
         const blob = new Blob([window.obfuscatedCode], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
@@ -922,10 +914,10 @@ levelBtns.forEach(btn => {
     window.getExpertConfig = getExpertConfig;
 
     // --- HISTORY MANAGEMENT ---
-    window.saveToHistory = function(filename, config, status, logs, duration, outputFile = null, detailedMetrics = null) {
+    window.saveToHistory = function(filename, config, status, logs, duration, outputFile = null) {
         const history = JSON.parse(localStorage.getItem('obfuscationHistory') || '[]');
         const username = localStorage.getItem('username') || 'Guest';
-        const level = config?.obfuscationLevel || config?.level || 'source'; // Get level from config
+        const level = config?.obfuscationLevel || 'source'; // Get level from config
     
         const historyItem = {
             id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -937,8 +929,7 @@ levelBtns.forEach(btn => {
             config: config,
             logs: logs,
             duration: duration,
-            outputFile: outputFile,
-            detailedMetrics: detailedMetrics // Store detailed obfuscation metrics
+            outputFile: outputFile
         };
         
         console.log('💾 Saving to history:', historyItem); // Debug

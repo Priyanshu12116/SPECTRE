@@ -9,6 +9,7 @@ import hashlib
 import zipfile
 import subprocess
 import tempfile
+import random
 from datetime import datetime
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
@@ -22,8 +23,12 @@ class CodeObfuscator:
             'bogus_code_lines': 0,
             'control_flow_changes': 0,
             'obfuscation_cycles': 0,
-            'constants_encoded': 0
+            'constants_encoded': 0,
+            'fake_loops_inserted': 0,
+            'variables_renamed': 0
         }
+        self.input_params = {}
+        self.compilation_time = 0
         
     def encrypt_string_aes(self, plaintext, key):
         """Encrypt a string using AES-256"""
@@ -269,22 +274,71 @@ char* decrypt_str(const char* encrypted) {
         }
     
     def generate_report(self, original_code, obfuscated_code, verification_result, config):
-        """Generate comprehensive obfuscation report"""
+        """Generate comprehensive obfuscation report with detailed metrics"""
+        
+        # Calculate detailed metrics
+        original_lines = len(original_code.split('\n'))
+        obfuscated_lines = len(obfuscated_code.split('\n'))
+        
         report = {
             'timestamp': datetime.now().isoformat(),
+            'compiler': 'GCC/G++',
+            'obfuscation_method': 'Source Code Transformation',
+            
+            # a. Input parameters - all logged
             'input_parameters': {
                 'obfuscation_level': config.get('level', 'balanced'),
                 'password_protected': config.get('password_protected', False),
-                'verification_enabled': config.get('verify', True)
+                'verification_enabled': config.get('verify', True),
+                'platform': config.get('platform', 'windows'),
+                'compiler': 'GCC/G++',
+                'timestamp_submitted': datetime.now().isoformat()
             },
+            
+            # b. Output file attributes - size, method, etc.
             'output_attributes': {
                 'original_size_bytes': len(original_code),
                 'obfuscated_size_bytes': len(obfuscated_code),
                 'size_increase_percent': round(
                     ((len(obfuscated_code) - len(original_code)) / len(original_code)) * 100, 2
-                )
+                ),
+                'original_lines': original_lines,
+                'obfuscated_lines': obfuscated_lines,
+                'lines_added': obfuscated_lines - original_lines,
+                'obfuscation_method': 'Source Code Transformation',
+                'encryption_algorithm': 'AES-256-CBC (for strings)',
+                'compilation_time': self.compilation_time
             },
-            'obfuscation_statistics': self.obfuscation_stats,
+            
+            # c, d, e, f. Detailed obfuscation statistics
+            'obfuscation_statistics': {
+                # d. Number of obfuscation cycles
+                'obfuscation_cycles': self.obfuscation_stats['obfuscation_cycles'],
+                
+                # e. String obfuscation/encryption
+                'strings_encrypted': self.obfuscation_stats['strings_encrypted'],
+                
+                # c. Bogus code information
+                'bogus_code_lines': self.obfuscation_stats['bogus_code_lines'],
+                'bogus_code_percentage': round(
+                    (self.obfuscation_stats['bogus_code_lines'] / max(obfuscated_lines, 1)) * 100, 2
+                ),
+                
+                # f. Fake loops inserted
+                'fake_loops_inserted': self.obfuscation_stats['fake_loops_inserted'],
+                
+                # Additional metrics
+                'control_flow_changes': self.obfuscation_stats['control_flow_changes'],
+                'constants_encoded': self.obfuscation_stats['constants_encoded'],
+                'variables_renamed': self.obfuscation_stats['variables_renamed'],
+                'total_transformations': sum([
+                    self.obfuscation_stats['strings_encrypted'],
+                    self.obfuscation_stats['bogus_code_lines'],
+                    self.obfuscation_stats['control_flow_changes'],
+                    self.obfuscation_stats['constants_encoded']
+                ])
+            },
+            
             'verification': verification_result,
             'status': 'SUCCESS' if verification_result.get('verified', False) else 'FAILED'
         }

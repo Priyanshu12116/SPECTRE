@@ -345,9 +345,15 @@ def obfuscate_with_llvm():
         print(f"INFO: Generated vault password: {vault_password}")
         print(f"DEBUG: Password in report: {report.get('vault_password', 'NOT FOUND')}")
         
+        # Embed password hash in LLVM IR for validation during compilation
+        import hashlib
+        password_hash = hashlib.sha256(vault_password.encode()).hexdigest()
+        obfuscated_ir_with_hash = f"; SPECTRE_PASSWORD_HASH: {password_hash}\n" + result['obfuscated_ir']
+        print(f"INFO: Embedded password hash in LLVM IR for validation")
+        
         return jsonify({
             "success": True,
-            "obfuscated_ir": result['obfuscated_ir'],
+            "obfuscated_ir": obfuscated_ir_with_hash,
             "object_file_size": result['object_size'],
             "executable_size": result['executable_size'],
             "report": report,
@@ -359,8 +365,13 @@ def obfuscate_with_llvm():
     except Exception as e:
         print(f"ERROR: LLVM obfuscation failed: {e}")
         import traceback
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+        error_trace = traceback.format_exc()
+        print(error_trace)
+        return jsonify({
+            "error": str(e),
+            "details": "Check server console for full traceback",
+            "type": type(e).__name__
+        }), 500
 
 @app.route("/api/llvm/status", methods=["GET"])
 def llvm_status():
@@ -410,6 +421,218 @@ def analyze_security():
         return jsonify({
             "success": False,
             "error": str(e)
+        }), 500
+
+@app.route("/api/llvm/compile", methods=["POST"])
+def compile_llvm_ir():
+    """
+    Compile LLVM IR (.ll file) to executable using Code Vault password
+    This allows users to upload .ll files and get the executable output
+    """
+    import subprocess
+    import shutil
+    
+    try:
+        # Get the uploaded data
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+            
+        llvm_ir = data.get('llvm_ir', '')
+        password = data.get('password', '')
+        is_cpp = data.get('is_cpp', True)  # Default to C++
+        
+        if not llvm_ir:
+            return jsonify({"error": "No LLVM IR provided"}), 400
+        
+        if not password:
+            return jsonify({"error": "Code Vault password required"}), 400
+        
+        print(f"INFO: Compiling LLVM IR to executable...")
+        print(f"INFO: IR size: {len(llvm_ir)} bytes")
+        print(f"INFO: Language: {'C++' if is_cpp else 'C'}")
+        
+        # Password validation
+        if len(password) < 8:
+            return jsonify({"error": "Password must be at least 8 characters"}), 401
+        
+        # Check if LLVM IR contains password hash for validation
+        # Format: ; SPECTRE_PASSWORD_HASH: <hash>
+        import hashlib
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        
+        print(f"DEBUG: Checking for password hash in LLVM IR...")
+        print(f"DEBUG: User password hash: {password_hash[:16]}...")
+        
+        password_validated = False
+        
+        if '; SPECTRE_PASSWORD_HASH:' in llvm_ir:
+            # Extract the embedded hash
+            for line in llvm_ir.split('\n'):
+                if line.startswith('; SPECTRE_PASSWORD_HASH:'):
+                    embedded_hash = line.split(':', 1)[1].strip()
+                    print(f"DEBUG: Embedded hash found: {embedded_hash[:16]}...")
+                    
+                    if embedded_hash != password_hash:
+                        print(f"ERROR: Invalid password (hash mismatch)")
+                        print(f"ERROR: Expected: {embedded_hash[:16]}...")
+                        print(f"ERROR: Got: {password_hash[:16]}...")
+                        return jsonify({
+                            "error": "Invalid Code Vault password",
+                            "details": "The password you entered does not match the password used during obfuscation"
+                        }), 401
+                    
+                    print(f"INFO: ✅ Password validated successfully!")
+                    password_validated = True
+                    break
+            
+            if not password_validated:
+                print(f"ERROR: Password hash marker found but could not extract hash")
+                return jsonify({
+                    "error": "Invalid LLVM IR format",
+                    "details": "Password hash marker found but hash could not be extracted"
+                }), 400
+        else:
+            # No hash embedded - reject for security
+            print(f"ERROR: No password hash found in LLVM IR")
+            return jsonify({
+                "error": "Invalid LLVM IR file",
+                "details": "This .ll file does not contain a password hash. Please re-obfuscate your code with the latest version of SPECTRE."
+            }), 400
+        
+        # Create temporary directory for compilation
+        temp_dir = tempfile.mkdtemp(prefix='spectre_compile_')
+        print(f"INFO: Temp directory: {temp_dir}")
+        
+        try:
+            # Save LLVM IR to file
+            ir_file = os.path.join(temp_dir, 'input.ll')
+            with open(ir_file, 'w', encoding='utf-8') as f:
+                f.write(llvm_ir)
+            
+            print(f"INFO: LLVM IR saved to: {ir_file}")
+            
+            # Compile IR to object file
+            obj_file = os.path.join(temp_dir, 'output.o')
+            
+            # Try llc first
+            try:
+                cmd = ['llc', '-filetype=obj', ir_file, '-o', obj_file]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                
+                if result.returncode != 0:
+                    # Fallback to clang
+                    cmd = ['clang', '-c', ir_file, '-o', obj_file]
+                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                    
+                    if result.returncode != 0:
+                        return jsonify({
+                            "error": "Failed to compile LLVM IR to object file",
+                            "details": result.stderr
+                        }), 500
+            except FileNotFoundError:
+                # llc not found, try clang
+                cmd = ['clang', '-c', ir_file, '-o', obj_file]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                
+                if result.returncode != 0:
+                    return jsonify({
+                        "error": "Failed to compile LLVM IR to object file",
+                        "details": result.stderr
+                    }), 500
+            
+            print(f"INFO: Object file created: {obj_file}")
+            
+            # Link to executable
+            exe_file = os.path.join(temp_dir, 'output.exe')
+            
+            # Use appropriate linker based on is_cpp flag
+            if is_cpp:
+                linker_cmd = ['clang++', obj_file, '-o', exe_file]
+            else:
+                linker_cmd = ['clang', obj_file, '-o', exe_file]
+            
+            result = subprocess.run(linker_cmd, capture_output=True, text=True, timeout=30)
+            
+            if result.returncode != 0:
+                # Try fallback to g++/gcc
+                print(f"INFO: Clang linking failed, trying {'g++' if is_cpp else 'gcc'}...")
+                if is_cpp:
+                    linker_cmd = ['g++', obj_file, '-o', exe_file]
+                else:
+                    linker_cmd = ['gcc', obj_file, '-o', exe_file]
+                
+                result = subprocess.run(linker_cmd, capture_output=True, text=True, timeout=30)
+                
+                if result.returncode != 0:
+                    return jsonify({
+                        "error": "Failed to link executable",
+                        "details": result.stderr
+                    }), 500
+            
+            print(f"INFO: Executable created: {exe_file}")
+            
+            # Verify the executable file exists
+            if not os.path.exists(exe_file):
+                print(f"ERROR: Executable file was not created at {exe_file}")
+                return jsonify({"error": "Executable file was not created"}), 500
+            
+            # Get file size
+            exe_size = os.path.getsize(exe_file)
+            print(f"INFO: Executable size: {exe_size} bytes")
+            
+            # Copy to a persistent location before sending (temp dir might be cleaned up)
+            import shutil
+            persistent_exe = os.path.join(tempfile.gettempdir(), f'spectre_output_{os.getpid()}.exe')
+            shutil.copy2(exe_file, persistent_exe)
+            print(f"INFO: Copied to persistent location: {persistent_exe}")
+            
+            # Return the executable as a downloadable file
+            try:
+                return send_file(
+                    persistent_exe,
+                    as_attachment=True,
+                    download_name='obfuscated_program.exe',
+                    mimetype='application/octet-stream'
+                )
+            finally:
+                # Clean up temp directory after a delay (let the download start first)
+                # Note: The persistent file will be cleaned up on next compilation
+                pass
+            
+        except subprocess.TimeoutExpired:
+            print("ERROR: Compilation timeout")
+            return jsonify({
+                "error": "Compilation timeout (took longer than 30 seconds)",
+                "type": "TimeoutError"
+            }), 500
+        except FileNotFoundError as e:
+            print(f"ERROR: Tool not found: {e}")
+            return jsonify({
+                "error": "Required compilation tools (clang/gcc) not found",
+                "details": str(e),
+                "type": "FileNotFoundError"
+            }), 500
+        except Exception as e:
+            import traceback
+            error_trace = traceback.format_exc()
+            print(f"ERROR: Compilation failed")
+            print(error_trace)
+            return jsonify({
+                "error": f"Compilation failed: {str(e)}",
+                "type": type(e).__name__,
+                "details": error_trace
+            }), 500
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"ERROR: Request handling failed")
+        print(error_trace)
+        return jsonify({
+            "error": str(e),
+            "type": type(e).__name__,
+            "details": error_trace
         }), 500
 
 @app.route("/api/status", methods=["GET"])

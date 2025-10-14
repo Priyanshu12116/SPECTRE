@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Server Connection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-box {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .success {
+            color: #2ed573;
+        }
+        .error {
+            color: #ff4757;
+        }
+        .info {
+            color: #667eea;
+        }
+        pre {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 SPECTRE Server Connection Test</h1>
+    
+    <div class="test-box">
+        <h2>Quick Tests</h2>
+        <button onclick="testStatus()">Test /api/status</button>
+        <button onclick="testCORS()">Test CORS</button>
+        <button onclick="testCompileEndpoint()">Test /api/llvm/compile</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div class="test-box" id="results">
+        <h2>Results</h2>
+        <div id="output">Click a button above to run a test...</div>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            output.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+        }
+
+        function clearResults() {
+            output.innerHTML = 'Click a button above to run a test...';
+        }
+
+        async function testStatus() {
+            log('Testing /api/status endpoint...', 'info');
+            
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/status');
+                
+                log(`Status Code: ${response.status}`, response.ok ? 'success' : 'error');
+                log(`Status Text: ${response.statusText}`, 'info');
+                
+                const data = await response.json();
+                log('Response:', 'info');
+                log(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                
+                if (response.ok) {
+                    log('✅ Server is running and accessible!', 'success');
+                } else {
+                    log('❌ Server responded but with an error', 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                log('Server is NOT accessible. Make sure it\'s running!', 'error');
+            }
+        }
+
+        async function testCORS() {
+            log('Testing CORS configuration...', 'info');
+            
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/status', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log('CORS Headers:', 'info');
+                log(`Access-Control-Allow-Origin: ${response.headers.get('Access-Control-Allow-Origin')}`, 'info');
+                log(`Access-Control-Allow-Methods: ${response.headers.get('Access-Control-Allow-Methods')}`, 'info');
+                
+                if (response.headers.get('Access-Control-Allow-Origin')) {
+                    log('✅ CORS is properly configured', 'success');
+                } else {
+                    log('⚠️ CORS headers not found (might be an issue)', 'error');
+                }
+            } catch (error) {
+                log(`❌ CORS test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCompileEndpoint() {
+            log('Testing /api/llvm/compile endpoint...', 'info');
+            
+            const testIR = `; ModuleID = 'test.c'
+source_filename = "test.c"
+target datalayout = "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-w64-windows-gnu"
+
+@.str = private unnamed_addr constant [6 x i8] c"Test\\0A\\00", align 1
+
+declare dso_local i32 @printf(ptr noundef, ...) #1
+
+define dso_local i32 @main() #0 {
+  %1 = call i32 (ptr, ...) @printf(ptr noundef @.str)
+  ret i32 0
+}
+
+attributes #0 = { noinline norecurse uwtable }
+attributes #1 = { }
+`;
+            
+            try {
+                log('Sending test compilation request...', 'info');
+                
+                const response = await fetch('http://127.0.0.1:5000/api/llvm/compile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        llvm_ir: testIR,
+                        password: 'test12345',
+                        is_cpp: false
+                    })
+                });
+                
+                log(`Status Code: ${response.status}`, response.ok ? 'success' : 'error');
+                log(`Content-Type: ${response.headers.get('Content-Type')}`, 'info');
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    log(`✅ Compilation successful!`, 'success');
+                    log(`Executable size: ${blob.size} bytes`, 'success');
+                    log('The endpoint is working correctly!', 'success');
+                } else {
+                    const error = await response.json();
+                    log(`❌ Compilation failed:`, 'error');
+                    log(`<pre>${JSON.stringify(error, null, 2)}</pre>`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                log('Cannot connect to compile endpoint', 'error');
+            }
+        }
+
+        // Auto-run status test on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('Auto-running status test...', 'info');
+                testStatus();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
