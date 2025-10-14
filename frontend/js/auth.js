@@ -106,13 +106,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 username: userObject.name || userObject.email.split('@')[0],
                 authMethod: 'google',
                 profilePicture: userObject.picture || '',
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                hasPassword: false // Google users don't have password initially
             };
             registeredUsers.push(newUser);
             localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-        } else if (!existingUser.createdAt) {
+        } else {
             // Update existing user with createdAt if missing
-            existingUser.createdAt = new Date().toISOString();
+            if (!existingUser.createdAt) {
+                existingUser.createdAt = new Date().toISOString();
+            }
+            // Ensure hasPassword flag exists for existing Google users
+            if (existingUser.authMethod === 'google' && existingUser.hasPassword === undefined) {
+                existingUser.hasPassword = existingUser.password ? true : false;
+            }
             localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
         }
         

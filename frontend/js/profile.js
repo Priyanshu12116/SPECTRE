@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUserProfile();
     loadStatistics();
     loadObfuscationHistory();
+    checkPasswordStatus();
     setupEventListeners();
 });
 
@@ -53,7 +54,11 @@ function loadUserProfile() {
     document.getElementById('userUsername').textContent = username;
     
     // Format auth method
-    const authMethodText = authMethod === 'google' ? 'Google OAuth' : 'Email & Password';
+    let authMethodText = authMethod === 'google' ? 'Google OAuth' : 'Email & Password';
+    // Check if Google user has created a password
+    if (authMethod === 'google' && currentUser && currentUser.hasPassword) {
+        authMethodText += ' + Password';
+    }
     document.getElementById('authMethod').textContent = authMethodText;
 
     // Member since
@@ -320,7 +325,50 @@ function getFileIcon(filename) {
     return icons[ext] || 'file';
 }
 
+function checkPasswordStatus() {
+    const authMethod = localStorage.getItem('authMethod');
+    const username = localStorage.getItem('username');
+    const email = localStorage.getItem('email');
+    
+    if (authMethod === 'google') {
+        const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const currentUser = registeredUsers.find(u => u.username === username || u.email === email);
+        
+        // Check if user has dismissed the banner in this session
+        const bannerDismissed = sessionStorage.getItem('passwordBannerDismissed');
+        
+        if (currentUser && !currentUser.hasPassword && !bannerDismissed) {
+            // Show the password warning banner
+            const banner = document.getElementById('passwordWarningBanner');
+            if (banner) {
+                banner.style.display = 'block';
+            }
+        }
+    }
+}
+
 function setupEventListeners() {
+    // Password warning banner buttons
+    const createPasswordBtn = document.getElementById('createPasswordBtn');
+    const closeBannerBtn = document.getElementById('closeBannerBtn');
+    
+    if (createPasswordBtn) {
+        createPasswordBtn.addEventListener('click', () => {
+            openPasswordModalForGoogleUser();
+        });
+    }
+    
+    if (closeBannerBtn) {
+        closeBannerBtn.addEventListener('click', () => {
+            const banner = document.getElementById('passwordWarningBanner');
+            if (banner) {
+                banner.style.display = 'none';
+                // Remember dismissal for this session
+                sessionStorage.setItem('passwordBannerDismissed', 'true');
+            }
+        });
+    }
+    
     // Change Avatar/Photo functionality
     const changeAvatarBtn = document.getElementById('changeAvatarBtn');
     if (changeAvatarBtn) {
@@ -388,11 +436,18 @@ function setupEventListeners() {
     
     changePasswordBtn.addEventListener('click', () => {
         const authMethod = localStorage.getItem('authMethod');
-        if (authMethod === 'google') {
-            alert('You are signed in with Google. Password change is not available.');
-            return;
+        const username = localStorage.getItem('username');
+        const email = localStorage.getItem('email');
+        const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const currentUser = registeredUsers.find(u => u.username === username || u.email === email);
+        
+        if (authMethod === 'google' && currentUser && !currentUser.hasPassword) {
+            // Google user without password - open modal for creating password
+            openPasswordModalForGoogleUser();
+        } else {
+            // Traditional user or Google user with password - open modal for changing password
+            openPasswordModalForChanging();
         }
-        changePasswordModal.classList.add('active');
     });
     
     closePasswordModal.addEventListener('click', () => {
@@ -466,7 +521,60 @@ function saveProfileChanges() {
     }, 1500);
 }
 
+function openPasswordModalForGoogleUser() {
+    const modal = document.getElementById('changePasswordModal');
+    const modalTitle = document.getElementById('passwordModalTitle');
+    const googleUserInfo = document.getElementById('googleUserPasswordInfo');
+    const currentPasswordGroup = document.getElementById('currentPasswordGroup');
+    const submitBtn = document.getElementById('submitPasswordBtn');
+    
+    // Update modal for creating password
+    modalTitle.textContent = 'Create Password';
+    googleUserInfo.style.display = 'flex';
+    currentPasswordGroup.style.display = 'none';
+    submitBtn.textContent = 'Create Password';
+    
+    // Remove required attribute from current password
+    document.getElementById('currentPassword').removeAttribute('required');
+    
+    modal.classList.add('active');
+    lucide.createIcons();
+}
+
+function openPasswordModalForChanging() {
+    const modal = document.getElementById('changePasswordModal');
+    const modalTitle = document.getElementById('passwordModalTitle');
+    const googleUserInfo = document.getElementById('googleUserPasswordInfo');
+    const currentPasswordGroup = document.getElementById('currentPasswordGroup');
+    const submitBtn = document.getElementById('submitPasswordBtn');
+    
+    // Update modal for changing password
+    modalTitle.textContent = 'Change Password';
+    googleUserInfo.style.display = 'none';
+    currentPasswordGroup.style.display = 'block';
+    submitBtn.textContent = 'Update Password';
+    
+    // Add required attribute to current password
+    document.getElementById('currentPassword').setAttribute('required', 'required');
+    
+    modal.classList.add('active');
+}
+
 function changePassword() {
+    const authMethod = localStorage.getItem('authMethod');
+    const username = localStorage.getItem('username');
+    const email = localStorage.getItem('email');
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const userIndex = registeredUsers.findIndex(u => u.username === username || u.email === email);
+    
+    if (userIndex === -1) {
+        alert('User not found!');
+        return;
+    }
+    
+    const currentUser = registeredUsers[userIndex];
+    const isGoogleUserCreatingPassword = authMethod === 'google' && !currentUser.hasPassword;
+    
     const currentPassword = document.getElementById('currentPassword').value;
     const newPassword = document.getElementById('newPassword').value;
     const confirmNewPassword = document.getElementById('confirmNewPassword').value;
@@ -481,30 +589,37 @@ function changePassword() {
         return;
     }
     
-    const username = localStorage.getItem('username');
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const userIndex = registeredUsers.findIndex(u => u.username === username);
-    
-    if (userIndex === -1) {
-        alert('User not found!');
-        return;
-    }
-    
-    // Verify current password
-    if (registeredUsers[userIndex].password !== currentPassword) {
-        alert('Current password is incorrect!');
-        return;
+    if (!isGoogleUserCreatingPassword) {
+        // Verify current password for traditional users or Google users with existing password
+        if (!currentUser.password || currentUser.password !== currentPassword) {
+            alert('Current password is incorrect!');
+            return;
+        }
     }
     
     // Update password
     registeredUsers[userIndex].password = newPassword;
+    registeredUsers[userIndex].hasPassword = true;
     localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
     
     // Close modal and reset form
     document.getElementById('changePasswordModal').classList.remove('active');
     document.getElementById('changePasswordForm').reset();
     
-    alert('Password changed successfully!');
+    if (isGoogleUserCreatingPassword) {
+        // Hide the banner
+        const banner = document.getElementById('passwordWarningBanner');
+        if (banner) {
+            banner.style.display = 'none';
+        }
+        showNotification('Password created successfully! You can now login with email/username and password.', 'success');
+        // Reload profile to update auth method display
+        setTimeout(() => {
+            loadUserProfile();
+        }, 500);
+    } else {
+        showNotification('Password changed successfully!', 'success');
+    }
 }
 
 function downloadFile(id) {

@@ -34,6 +34,23 @@
     </nav>
 
     <div class="profile-container">
+        <!-- Password Warning Banner for Google Users -->
+        <div id="passwordWarningBanner" class="password-warning-banner" style="display: none;">
+            <div class="banner-content">
+                <i data-lucide="alert-circle"></i>
+                <div class="banner-text">
+                    <strong>Action Required:</strong> You signed in with Google. Please create a password to secure your account and enable traditional login.
+                </div>
+                <button class="banner-button" id="createPasswordBtn">
+                    <i data-lucide="lock"></i>
+                    Create Password
+                </button>
+                <button class="banner-close" id="closeBannerBtn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+        </div>
+
         <!-- Page Title -->
         <div class="page-title-section">
             <h1 class="page-title">
@@ -221,20 +238,25 @@
     <div id="changePasswordModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Change Password</h2>
-                <button class="modal-close" id="closePasswordModal">
+                <h2 id="passwordModalTitle">Change Password</h2>
+                <button class="modal-close" id="closePasswordModal" aria-label="Close modal">
                     <i data-lucide="x"></i>
                 </button>
             </div>
             <div class="modal-body">
+                <div id="googleUserPasswordInfo" class="info-message" style="display: none;">
+                    <i data-lucide="info"></i>
+                    <p>You signed in with Google. Create a password to enable traditional login with email/username and password.</p>
+                </div>
                 <form id="changePasswordForm">
-                    <div class="form-group">
+                    <div class="form-group" id="currentPasswordGroup">
                         <label for="currentPassword">Current Password</label>
                         <input type="password" id="currentPassword" required>
                     </div>
                     <div class="form-group">
                         <label for="newPassword">New Password</label>
                         <input type="password" id="newPassword" required minlength="8">
+                        <small class="form-hint">Password must be at least 8 characters long</small>
                     </div>
                     <div class="form-group">
                         <label for="confirmNewPassword">Confirm New Password</label>
@@ -242,7 +264,7 @@
                     </div>
                     <div class="modal-actions">
                         <button type="button" class="cta-button secondary" id="cancelPassword">Cancel</button>
-                        <button type="submit" class="cta-button">Update Password</button>
+                        <button type="submit" class="cta-button" id="submitPasswordBtn">Update Password</button>
                     </div>
                 </form>
             </div>
