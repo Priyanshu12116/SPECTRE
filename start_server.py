@@ -12,6 +12,14 @@ if os.path.exists(llvm_path):
 else:
     print(f"⚠️ LLVM not found at: {llvm_path}")
 
+# Add MinGW to PATH (Windows)
+mingw_path = r"C:\msys64\mingw64\bin"
+if os.path.exists(mingw_path):
+    os.environ['PATH'] = mingw_path + os.pathsep + os.environ.get('PATH', '')
+    print(f"✅ Added MinGW to PATH: {mingw_path}")
+else:
+    print(f"⚠️ MinGW not found at: {mingw_path}")
+
 # Add backend to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 

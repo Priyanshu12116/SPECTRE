@@ -11,8 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load history from localStorage
     function loadHistory() {
-        const history = JSON.parse(localStorage.getItem('obfuscationHistory') || '[]');
-        console.log('📊 Loaded history:', history); // Debug
+        const allHistory = JSON.parse(localStorage.getItem('obfuscationHistory') || '[]');
+        const username = localStorage.getItem('username');
+        
+        // Filter history for current user only
+        const history = allHistory.filter(item => item.username === username);
+        console.log('📊 Loaded history for', username, ':', history); // Debug
         return history;
     }
 

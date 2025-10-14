@@ -2,6 +2,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const loginMessage = document.getElementById('loginMessage');
 
+    // --- PASSWORD VISIBILITY TOGGLE ---
+    const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+    togglePasswordButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const wrapper = this.parentElement;
+            const input = wrapper.querySelector('input');
+            const eyeIcon = this.querySelector('.eye-icon');
+            const eyeOffIcon = this.querySelector('.eye-off-icon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeIcon.style.display = 'none';
+                eyeOffIcon.style.display = 'block';
+            } else {
+                input.type = 'password';
+                eyeIcon.style.display = 'block';
+                eyeOffIcon.style.display = 'none';
+            }
+        });
+    });
+
     // --- 3D INTERACTIVE SHIELD LOGIC (Unchanged) ---
     const container = document.getElementById('shield-container');
     if (container && typeof THREE !== 'undefined') {
@@ -62,28 +83,103 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- GOOGLE SIGN-IN CALLBACK ---
+    window.handleCredentialResponse = function(response) {
+        console.log("Encoded JWT ID token: " + response.credential);
+        
+        // Decode the JWT token to get user information
+        const userObject = parseJwt(response.credential);
+        console.log("User Info:", userObject);
+        
+        loginMessage.textContent = 'Google Sign-In Successful! Accessing platform...';
+        loginMessage.className = 'message success';
+        
+        // Store user information
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('username', userObject.name || userObject.email);
+        localStorage.setItem('email', userObject.email);
+        localStorage.setItem('authMethod', 'google');
+        localStorage.setItem('profilePicture', userObject.picture || '');
+        
+        // Animate and redirect
+        document.querySelector('.auth-wrapper').style.opacity = '0';
+        document.querySelector('.auth-wrapper').style.transform = 'scale(0.95)';
+        document.querySelector('.auth-wrapper').style.transition = 'opacity 0.5s, transform 0.5s';
+        
+        setTimeout(() => {
+            const redirectPath = sessionStorage.getItem('redirectAfterLogin');
+            if (redirectPath) {
+                sessionStorage.removeItem('redirectAfterLogin');
+                window.location.href = redirectPath;
+            } else {
+                window.location.href = 'index.html';
+            }
+        }, 1000);
+    };
+
+    // Helper function to decode JWT token
+    function parseJwt(token) {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            console.error('Error parsing JWT:', e);
+            return {};
+        }
+    }
+
     // --- UPDATED: Simulated Login Logic ---
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = loginForm.querySelector('input[type="text"]').value;
-            const password = loginForm.querySelector('input[type="password"]').value;
+            const usernameOrEmail = loginForm.querySelector('input[type="text"]').value.trim();
+            const password = loginForm.querySelector('#password').value;
             loginMessage.textContent = 'Attempting authentication...';
             loginMessage.className = 'message';
             await new Promise(resolve => setTimeout(resolve, 800));
 
-            if (username === 'admin' && password === '123') {
+            // Check for hardcoded admin account
+            let isAuthenticated = false;
+            let authenticatedUser = null;
+
+            if (usernameOrEmail === 'admin' && password === '123') {
+                isAuthenticated = true;
+                authenticatedUser = {
+                    username: 'admin',
+                    fullname: 'Admin User',
+                    email: 'admin@spectre.com'
+                };
+            } else {
+                // Check against registered users
+                const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+                const user = registeredUsers.find(u => 
+                    (u.username === usernameOrEmail || u.email === usernameOrEmail) && u.password === password
+                );
+
+                if (user) {
+                    isAuthenticated = true;
+                    authenticatedUser = user;
+                }
+            }
+
+            if (isAuthenticated && authenticatedUser) {
                 loginMessage.textContent = 'Authentication Successful. Accessing platform...';
                 loginMessage.classList.add('success');
                 localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('username', username);
+                localStorage.setItem('username', authenticatedUser.username);
+                localStorage.setItem('email', authenticatedUser.email || '');
+                localStorage.setItem('authMethod', 'traditional');
 
                 document.querySelector('.auth-wrapper').style.opacity = '0';
                 document.querySelector('.auth-wrapper').style.transform = 'scale(0.95)';
                 document.querySelector('.auth-wrapper').style.transition = 'opacity 0.5s, transform 0.5s';
 
                 setTimeout(() => {
-                    // **NEW:** Check for a stored redirect path
+                    // Check for a stored redirect path
                     const redirectPath = sessionStorage.getItem('redirectAfterLogin');
 
                     if (redirectPath) {

@@ -20,6 +20,7 @@ import shutil
 import json
 from datetime import datetime
 from pathlib import Path
+from anti_analysis import AntiAnalysisInjector
 
 class LLVMObfuscator:
     def __init__(self):
@@ -35,6 +36,34 @@ class LLVMObfuscator:
         # Check LLVM availability
         self.llvm_available = self._check_llvm_tools()
         self.ollvm_available = self._check_obfuscator_llvm()
+        
+        # Detect available C compiler toolchain
+        self.toolchain = self._detect_toolchain()
+    
+    def _detect_toolchain(self):
+        """Detect which C compiler toolchain is available"""
+        # Check for MinGW
+        try:
+            result = subprocess.run(['gcc', '--version'], 
+                                  capture_output=True, 
+                                  timeout=5)
+            if result.returncode == 0 and b'mingw' in result.stdout.lower():
+                return 'mingw'
+        except:
+            pass
+        
+        # Check for MSVC
+        try:
+            result = subprocess.run(['cl'], 
+                                  capture_output=True, 
+                                  timeout=5)
+            if result.returncode == 0 or b'Microsoft' in result.stderr:
+                return 'msvc'
+        except:
+            pass
+        
+        # Default to system default
+        return 'system'
         
     def _check_llvm_tools(self):
         """Check if LLVM tools are available"""
@@ -133,10 +162,31 @@ class LLVMObfuscator:
                 '-emit-llvm',            # Emit LLVM IR
                 f'-O{optimization_level}', # Optimization level
                 '-Xclang', '-disable-O0-optnone',  # Allow optimization
-                '--target=x86_64-pc-windows-msvc',  # Windows target
                 source_file,
                 '-o', output_path
             ]
+            
+            # Configure based on detected toolchain
+            if os.name == 'nt':  # Windows
+                # Always use MinGW target on Windows (we installed it)
+                mingw_include = r"C:\msys64\mingw64\include"
+                mingw_lib = r"C:\msys64\mingw64\lib"
+                
+                if os.path.exists(mingw_include):
+                    cmd.extend([
+                        '--target=x86_64-w64-windows-gnu',
+                        f'-I{mingw_include}',
+                        f'-L{mingw_lib}',
+                        '--sysroot=C:\\msys64\\mingw64'
+                    ])
+                else:
+                    # Fallback to default
+                    pass
+            else:  # Linux/Unix
+                cmd.append('--target=x86_64-pc-linux-gnu')
+            
+            print(f"Detected toolchain: {self.toolchain}")
+            print(f"Compile command: {' '.join(cmd)}")
             
             result = subprocess.run(cmd, 
                                   capture_output=True, 
@@ -144,7 +194,9 @@ class LLVMObfuscator:
                                   timeout=30)
             
             if result.returncode != 0:
-                raise Exception(f"IR compilation failed: {result.stderr}")
+                error_msg = result.stderr
+                print(f"Compilation error: {error_msg}")
+                raise Exception(f"IR compilation failed: {error_msg}")
             
             # Count IR instructions
             with open(output_path, 'r') as f:
@@ -381,8 +433,22 @@ class LLVMObfuscator:
             print(f"SPECTRE LLVM Obfuscation Workflow ({language})")
             print("=" * 60)
             
+            # Step 0: Inject Anti-Analysis Protection (Landmines)
+            print("Step 0/5: Injecting anti-analysis landmines...")
+            # Set aggressive_mode=False for safe testing, True for production
+            anti_analysis = AntiAnalysisInjector(aggressive_mode=True)
+            protected_code, anti_stats = anti_analysis.inject_all_protections(source_code, platform)
+            print(f"✓ Injected {anti_stats['total_protections']} protection checks")
+            print(f"  - Anti-Debug: {anti_stats['anti_debug_checks']}")
+            print(f"  - VM Detection: {anti_stats['vm_detection_checks']}")
+            print(f"  - Sandbox Detection: {anti_stats['sandbox_detection_checks']}")
+            print(f"  - Timing Checks: {anti_stats['timing_checks']}")
+            
+            # Use protected code for compilation
+            source_code = protected_code
+            
             # Step 1: Compile to LLVM IR
-            print(f"Step 1/4: Compiling {language} to LLVM IR...")
+            print(f"Step 1/5: Compiling {language} to LLVM IR...")
             ir_file = os.path.join(temp_dir, 'code.ll')
             ir_file = self.compile_to_ir(source_code, ir_file, is_cpp=is_cpp)
             print(f"✓ Generated IR: {self.stats['ir_instructions']} instructions")
@@ -392,7 +458,7 @@ class LLVMObfuscator:
                 original_ir = f.read()
             
             # Step 2: Apply obfuscation passes
-            print(f"Step 2/4: Applying obfuscation passes (level: {level})...")
+            print(f"Step 2/5: Applying obfuscation passes (level: {level})...")
             obfuscated_ir_file = self.apply_obfuscation_passes(ir_file, level, use_ollvm)
             print(f"✓ Applied {len(self.stats['llvm_passes_applied'])} passes")
             
@@ -401,16 +467,23 @@ class LLVMObfuscator:
                 obfuscated_ir = f.read()
             
             # Step 3: Generate object file
-            print("Step 3/4: Generating object file...")
+            print("Step 3/5: Generating object file...")
             obj_file = os.path.join(temp_dir, 'code.o')
             obj_file = self.generate_object_file(obfuscated_ir_file, obj_file)
             print(f"✓ Object file: {self.stats['object_file_size']} bytes")
             
             # Step 4: Link executable
-            print("Step 4/4: Linking executable...")
+            print("Step 4/5: Linking executable...")
             exe_file = os.path.join(temp_dir, 'output.exe' if platform == 'windows' else 'output')
             exe_file = self.link_executable(obj_file, exe_file, platform)
             print(f"✓ Executable generated: {exe_file}")
+            
+            # Step 5: Finalize with landmine protection
+            print("Step 5/5: Finalizing landmine protection...")
+            print(f"✓ Code protected with aggressive anti-analysis measures")
+            
+            # Add anti-analysis stats to main stats
+            self.stats.update(anti_stats)
             
             # Calculate compilation time
             self.stats['compilation_time'] = (datetime.now() - start_time).total_seconds()

@@ -5,12 +5,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (authContainer) {
         if (isLoggedIn) {
-            authContainer.innerHTML = '<button id="logout-btn" class="logout-btn">Logout</button>';
+            const username = localStorage.getItem('username') || 'User';
+            authContainer.innerHTML = `
+                <a href="profile.html" class="profile-link">
+                    <i data-lucide="user"></i>
+                    ${username}
+                </a>
+                <button id="logout-btn" class="logout-btn">Logout</button>
+            `;
+            
+            // Re-initialize Lucide icons for the new icon
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            
             const logoutBtn = document.getElementById('logout-btn');
             logoutBtn.addEventListener('click', () => {
                 localStorage.removeItem('isLoggedIn');
                 localStorage.removeItem('username');
-                sessionStorage.removeItem('redirectAfterLogin'); // Clear any stored redirect paths on logout
+                localStorage.removeItem('email');
+                localStorage.removeItem('authMethod');
+                localStorage.removeItem('profilePicture');
+                sessionStorage.removeItem('redirectAfterLogin');
                 window.location.href = 'index.html';
             });
         } else {
@@ -23,16 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toolLink) {
         if (!isLoggedIn) {
             toolLink.addEventListener('click', (e) => {
-                e.preventDefault(); // Stop the link from going anywhere yet
-                
-                // **NEW:** Store the intended destination before redirecting to login
-                sessionStorage.setItem('redirectAfterLogin', 'app.html'); 
-                
-                // Now, send the user to the login page
-                window.location.href = 'login.html'; 
+                e.preventDefault();
+                sessionStorage.setItem('redirectAfterLogin', 'app.html');
+                window.location.href = 'login.html';
             });
         }
-        // If the user is logged in, the link works as normal (href="app.html")
     }
 
     // --- Globe animation logic ---

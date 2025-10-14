@@ -1,0 +1,27 @@
+/* Profile Link in Navigation */
+.profile-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: rgba(102, 126, 234, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 6px;
+    color: #FFFFFF;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.profile-link:hover {
+    background-color: rgba(102, 126, 234, 0.2);
+    border-color: #00A3FF;
+    color: #00A3FF;
+}
+
+#nav-auth-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}

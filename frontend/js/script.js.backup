@@ -340,8 +340,6 @@ levelBtns.forEach(btn => {
                 // Store obfuscated code and report for download
                 window.obfuscatedCode = result.obfuscated_code || result.obfuscated_ir;
                 window.obfuscationReport = result.report;
-                // Store original filename to preserve extension
-                window.originalFilename = uploadedFiles[0].name;
                 
                 // Add vault password to report if available (check both locations)
                 const vaultPassword = result.vault_password || result.report.vault_password;
@@ -400,7 +398,7 @@ levelBtns.forEach(btn => {
         const reportActions = document.querySelector('.report-actions');
         if (reportActions) {
             reportActions.innerHTML = `
-                <button onclick="downloadObfuscatedCode()">Download Obfuscated Code</button>
+                <button onclick="downloadObfuscatedCode()">Download Obfuscated Code (.c)</button>
                 <button onclick="downloadReport()">Download Report (JSON)</button>
                 <button onclick="downloadReportPDF()">Download Report (PDF)</button>
             `;
@@ -413,20 +411,11 @@ levelBtns.forEach(btn => {
             alert('No obfuscated code available');
             return;
         }
-        
-        // Preserve original file extension (.c, .cpp, .cc, etc.)
-        let filename = 'obfuscated_code.c';
-        if (window.originalFilename) {
-            const ext = window.originalFilename.substring(window.originalFilename.lastIndexOf('.'));
-            const baseName = window.originalFilename.substring(0, window.originalFilename.lastIndexOf('.'));
-            filename = `${baseName}_obfuscated${ext}`;
-        }
-        
         const blob = new Blob([window.obfuscatedCode], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = filename;
+        a.download = 'obfuscated_code.c';
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -445,7 +434,132 @@ levelBtns.forEach(btn => {
         URL.revokeObjectURL(url);
     };
     
-    // PDF report function is now in pdf-report.js
+    window.downloadReportPDF = function() {
+        if (!window.obfuscationReport) {
+            alert('No report available');
+            return;
+        }
+        const report = window.obfuscationReport;
+        
+        // Debug: Check if password exists
+        console.log('DEBUG: Generating HTML report with data:', report);
+        console.log('DEBUG: vault_password =', report.vault_password);
+        
+        // Handle both GCC and LLVM report formats
+        const stats = report.obfuscation_statistics || report.statistics || {};
+        const inputParams = report.input_parameters || report.input_params || {};
+        const outputAttrs = report.output_attributes || {};
+        
+        const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SPECTRE Obfuscation Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #0a7a2c; border-bottom: 3px solid #0a7a2c; padding-bottom: 10px; }
+        h2 { color: #333; margin-top: 30px; }
+        .status { font-size: 24px; font-weight: bold; padding: 15px; border-radius: 5px; text-align: center; }
+        .success { background: #d4edda; color: #155724; }
+        .failed { background: #f8d7da; color: #721c24; }
+        .sih-badge { background: #007bff; color: white; padding: 10px; border-radius: 5px; text-align: center; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #0a7a2c; color: white; }
+        .metric { font-size: 18px; font-weight: bold; color: #0a7a2c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ SPECTRE Obfuscation Report</h1>
+        <p><strong>Generated:</strong> ${report.timestamp || new Date().toISOString()}</p>
+        <p><strong>Compiler:</strong> ${report.compiler || 'LLVM/Clang'}</p>
+        <p><strong>Method:</strong> ${report.obfuscation_method || 'LLVM IR Transformation'}</p>
+        
+        <div class="status ${report.status === 'SUCCESS' ? 'success' : 'failed'}">
+            Status: ${report.status}
+        </div>
+        
+        ${report.llvm_specific && report.llvm_specific.sih_compliant ? '<div class="sih-badge">✅ SIH Compliant - Object File Obfuscation</div>' : ''}
+        
+        ${report.vault_password ? `
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin: 30px 0; text-align: center;">
+            <h2 style="color: white; margin-top: 0;">🔑 Code Vault Password</h2>
+            <div style="background: white; color: #667eea; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">Your Vault Password</div>
+                <div style="font-size: 28px; font-weight: bold; font-family: 'Courier New', monospace; word-break: break-all; user-select: all;">${report.vault_password}</div>
+                <div style="margin-top: 15px; padding: 10px; background: #d1ecf1; color: #0c5460; border-radius: 5px; font-size: 12px;">
+                    ${report.password_auto_generated ? '🤖 AUTO-GENERATED' : '✏️ CUSTOM'} | Length: ${report.vault_password.length} characters
+                </div>
+            </div>
+            <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; text-align: left; font-size: 14px;">
+                <strong>⚠️ Important:</strong>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>Keep this password secure!</li>
+                    <li>Users need this password to run the protected executable</li>
+                    <li>Distribute password separately from the executable</li>
+                    <li>Store in a password manager or secure location</li>
+                </ul>
+            </div>
+        </div>
+        ` : ''}
+        
+        <h2>Input Parameters</h2>
+        <table>
+            <tr><th>Parameter</th><th>Value</th></tr>
+            <tr><td>Obfuscation Level</td><td>${inputParams.obfuscation_level || 'balanced'}</td></tr>
+            <tr><td>Platform</td><td>${inputParams.platform || 'windows'}</td></tr>
+            ${inputParams.password_protected ? `<tr><td>Password Protected</td><td>Yes</td></tr>` : ''}
+            ${inputParams.verification_enabled ? `<tr><td>Verification Enabled</td><td>Yes</td></tr>` : ''}
+        </table>
+        
+        <h2>Output Attributes</h2>
+        <table>
+            <tr><th>Attribute</th><th>Value</th></tr>
+            ${outputAttrs.original_size_bytes ? `<tr><td>Original Size</td><td>${outputAttrs.original_size_bytes} bytes</td></tr>` : ''}
+            ${outputAttrs.obfuscated_size_bytes ? `<tr><td>Obfuscated Size</td><td>${outputAttrs.obfuscated_size_bytes} bytes</td></tr>` : ''}
+            ${outputAttrs.object_file_size ? `<tr><td>Object File Size</td><td>${outputAttrs.object_file_size} bytes</td></tr>` : ''}
+            ${outputAttrs.executable_size ? `<tr><td>Executable Size</td><td>${outputAttrs.executable_size} bytes</td></tr>` : ''}
+            ${outputAttrs.ir_instructions ? `<tr><td>IR Instructions</td><td>${outputAttrs.ir_instructions}</td></tr>` : ''}
+            ${outputAttrs.method ? `<tr><td>Method</td><td>${outputAttrs.method}</td></tr>` : ''}
+        </table>
+        
+        <h2>Obfuscation Statistics</h2>
+        <table>
+            <tr><th>Metric</th><th>Count</th></tr>
+            ${stats.strings_encrypted !== undefined ? `<tr><td>Strings Encrypted</td><td class="metric">${stats.strings_encrypted}</td></tr>` : ''}
+            ${stats.bogus_code_lines !== undefined ? `<tr><td>Bogus Code Lines</td><td class="metric">${stats.bogus_code_lines}</td></tr>` : ''}
+            ${stats.control_flow_changes !== undefined ? `<tr><td>Control Flow Changes</td><td class="metric">${stats.control_flow_changes}</td></tr>` : ''}
+            ${stats.constants_encoded !== undefined ? `<tr><td>Constants Encoded</td><td class="metric">${stats.constants_encoded}</td></tr>` : ''}
+            ${stats.obfuscation_cycles !== undefined ? `<tr><td>Obfuscation Cycles</td><td class="metric">${stats.obfuscation_cycles}</td></tr>` : ''}
+            ${stats.ir_transformations !== undefined ? `<tr><td>IR Transformations</td><td class="metric">${stats.ir_transformations}</td></tr>` : ''}
+            ${stats.llvm_passes_applied && stats.llvm_passes_applied.length > 0 ? `<tr><td>LLVM Passes</td><td class="metric">${stats.llvm_passes_applied.join(', ')}</td></tr>` : ''}
+            ${stats.compilation_time !== undefined ? `<tr><td>Compilation Time</td><td class="metric">${stats.compilation_time.toFixed(2)}s</td></tr>` : ''}
+        </table>
+        
+        ${report.verification ? `
+        <h2>Verification Result</h2>
+        <p><strong>Verified:</strong> ${report.verification.verified ? '✅ Yes' : '❌ No'}</p>
+        <p><strong>Reason:</strong> ${report.verification.reason || 'N/A'}</p>
+        ` : ''}
+        
+        ${report.security_score ? `
+        <h2>Security Score</h2>
+        <p class="metric">🛡️ ${report.security_score}/100</p>
+        ` : ''}
+    </div>
+</body>
+</html>
+        `;
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'obfuscation_report.html';
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     function finishProcess() {
         startBtn.disabled = false;
@@ -871,14 +985,10 @@ levelBtns.forEach(btn => {
     // --- HISTORY MANAGEMENT ---
     window.saveToHistory = function(filename, config, status, logs, duration, outputFile = null) {
         const history = JSON.parse(localStorage.getItem('obfuscationHistory') || '[]');
-        const username = localStorage.getItem('username') || 'Guest';
-        const level = config?.obfuscationLevel || 'source'; // Get level from config
     
         const historyItem = {
-            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-            username: username, // Add username to track per-user history
+            id: Date.now().toString(),
             filename: filename,
-            level: level, // Add level for filtering
             timestamp: new Date().toISOString(),
             status: status, // 'success' or 'failed'
             config: config,
