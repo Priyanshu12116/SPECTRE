@@ -9,11 +9,10 @@
 
 **SPECTRE** is an enterprise-grade C/C++ code obfuscation platform with **52+ advanced protection techniques**. It combines LLVM IR-level transformations, object file obfuscation, polymorphic engines, and password-protected code vaults to provide military-grade protection against reverse engineering, static analysis, and dynamic analysis attacks.
 
-Built for **Smart India Hackathon 2025**, SPECTRE provides a comprehensive defense-in-depth approach with an intuitive web interface, user authentication, and detailed obfuscation analytics.
 
 ### 🏆 Key Highlights
 - ✅ **52+ Protection Techniques** - Most comprehensive open-source obfuscator
-- ✅ **LLVM IR Obfuscation** - SIH 2025 compliant object-level protection
+- ✅ **LLVM IR Obfuscation** - compliant object-level protection
 - ✅ **Auto-Generated Passwords** - Secure vault protection with HTML reports
 - ✅ **Polymorphic Engine** - Code morphs on every execution
 - ✅ **Anti-Analysis Suite** - 20+ anti-debugging/VM/sandbox techniques
@@ -32,7 +31,7 @@ cd SPECTRE
 cd backend
 pip install -r requirements.txt
 
-# 3. Install LLVM (for SIH compliance)
+# 3. Install LLVM 
 # Windows: choco install llvm
 # Linux: sudo apt-get install clang llvm
 
@@ -73,7 +72,7 @@ docker-compose up --build
 9. **Security Scorecard** - 0-100 protection rating
 
 ### 🚀 **Phase 3: Advanced Techniques**
-10. **LLVM IR Obfuscation** - Intermediate representation transformation (SIH Compliant)
+10. **LLVM IR Obfuscation** - Intermediate representation transformation
 11. **Object File Obfuscation** - Direct .o/.obj manipulation
 12. **Advanced Control Flow** - Multi-layer flattening
 13. **Opaque Predicates** - Always-true/false conditions
@@ -230,7 +229,7 @@ SPECTRE/
 │   ├── server.py                         # Flask API server
 │   ├── obfuscator.py                     # Basic obfuscator
 │   ├── advanced_obfuscator.py            # Advanced obfuscation engine
-│   ├── llvm_obfuscator.py                # LLVM IR obfuscator (SIH compliant)
+│   ├── llvm_obfuscator.py                # LLVM IR obfuscator
 │   ├── security_analyzer.py              # Security analysis & SAST
 │   ├── polymorphic_engine.py             # Polymorphic code generation
 │   ├── smart_obfuscator.py               # Performance-aware obfuscation
@@ -420,14 +419,6 @@ int main() {
 }
 ```
 
-**Report Highlights:**
-- Strings encrypted: 1
-- Bogus lines: 6
-- Anti-debug checks: 1
-- Security score: 65/100
-- Size increase: 450%
-- Verification: ✅ PASSED
-
 ## 📚 Documentation
 
 - **[docs/HOW_TO_RUN.md](docs/HOW_TO_RUN.md)** - Complete usage guide
@@ -492,16 +483,15 @@ See [examples/README.md](examples/README.md) for details.
 
 1. **52+ Protection Techniques** - Most comprehensive open-source obfuscator
 2. **Auto-Generated Passwords** - Unique secure passwords with HTML reports
-3. **LLVM IR + Object File Obfuscation** - SIH 2025 compliant
-4. **Polymorphic Engine** - Code morphs on every execution
-5. **Smart Performance Balancing** - AI-driven optimization
-6. **20+ Anti-Analysis Techniques** - Anti-debug, VM, sandbox detection
-7. **Modern Web Interface** - 3D animations, glass-morphism design
-8. **Auto-Verification** - Ensures correctness automatically
-9. **Security Scoring** - Quantifiable 0-100 protection level
-10. **Expert Mode** - Granular control over all techniques
-11. **Docker Support** - Production-ready containerization
-12. **Comprehensive Reports** - HTML with passwords, JSON for automation
+3. **Polymorphic Engine** - Code morphs on every execution
+4. **Smart Performance Balancing** - AI-driven optimization
+5. **20+ Anti-Analysis Techniques** - Anti-debug, VM, sandbox detection
+6. **Modern Web Interface** - 3D animations, glass-morphism design
+7. **Auto-Verification** - Ensures correctness automatically
+8. **Security Scoring** - Quantifiable 0-100 protection level
+9. **Expert Mode** - Granular control over all techniques
+10. **Docker Support** - Production-ready containerization
+11. **Comprehensive Reports** - HTML with passwords, JSON for automation
 
 ## 🎨 Recent Updates & Improvements
 
@@ -586,15 +576,8 @@ See [examples/README.md](examples/README.md) for details.
 - ✅ Anti-analysis suite
 - ✅ Smart performance optimization
 
-## 🤝 Contributing
-
-This project is part of Smart India Hackathon 2025.
 
 **Repository:** [https://github.com/Priyanshu12116/SPECTRE](https://github.com/Priyanshu12116/SPECTRE)
-
-## 📄 License
-
-Smart India Hackathon 2025 - National Technical Research Organisation
 
 ## 📚 Documentation
 
@@ -614,8 +597,6 @@ Smart India Hackathon 2025 - National Technical Research Organisation
 **Examples:**
 - 💡 [Example Programs](examples/README.md)
 - 🎯 Simple, Intermediate, and Advanced examples included
-
-## 🆘 Support
 
 ---
 

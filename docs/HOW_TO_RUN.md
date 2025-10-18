@@ -59,24 +59,6 @@ examples/
 
 ---
 
-## 🎯 Access URLs
-
-### If Opening Directly:
-```
-file:///C:/Users/abhis/ProjectSIH/SPECTRE/frontend/pages/index.html
-```
-
-### If Using Live Server:
-```
-http://localhost:5500/frontend/pages/index.html
-```
-
-### Backend API:
-```
-http://localhost:5000
-```
-
----
 
 ## ✅ Verification
 
@@ -115,25 +97,11 @@ python server.py
 ```
 Wait for "Server is running" message
 
-### Issue: "Styles not loading"
+### Issue: "Styles or JavaScript not loading"
 **Solution:**
-- Make sure you're opening files from `frontend/pages/`
 - Check browser console for errors (F12)
-- Verify all paths were fixed (see PATH_FIX_SUMMARY.md)
-
-### Issue: "Images not showing"
-**Solution:**
-- Images should be in `frontend/assets/images/`
-- Check if files exist:
-  - spectrelogo.jpg
-  - shield.png
-  - worldmap.jpg
-
-### Issue: "JavaScript not working"
-**Solution:**
-- Check browser console (F12)
-- Verify JavaScript files in `frontend/js/`
-- Check if external CDN libraries load (Three.js, Lucide)
+- Verify files are in correct directories
+- Ensure all dependencies are loaded
 
 ---
 
@@ -184,11 +152,11 @@ Wait for "Server is running" message
 
 ```bash
 # Terminal 1: Start Backend
-cd C:\Users\abhis\ProjectSIH\SPECTRE\backend
+cd backend
 python server.py
 
 # Browser: Open Frontend
-# Navigate to: C:\Users\abhis\ProjectSIH\SPECTRE\frontend\pages\index.html
+# Navigate to: frontend/pages/index.html
 # Click: "Start Obfuscating"
 # Login: admin / 123
 # Upload: examples/simple_hello.c
@@ -203,10 +171,9 @@ python server.py
 ## 📚 Documentation
 
 - **README.md** - Project overview
-- **QUICK_START.md** - 5-minute guide
-- **ADVANCED_OBFUSCATION_GUIDE.md** - Technical details
-- **PATH_FIX_SUMMARY.md** - Path fixes applied
-- **PROJECT_STRUCTURE.md** - Directory organization
+- **QUICK_REFERENCE.md** - Quick commands
+- **LLVM_INSTALLATION_GUIDE.md** - LLVM setup
+- **GCC_INSTALLATION_GUIDE.md** - GCC setup
 
 ---
 
@@ -235,5 +202,3 @@ python server.py
 ---
 
 **Ready to protect your code!** 🛡️
-
-*For issues, check PATH_FIX_SUMMARY.md or PROJECT_STRUCTURE.md*
