@@ -45,7 +45,7 @@ python start_server.py
 
 📖 **New to SPECTRE?** Start with [docs/HOW_TO_RUN.md](docs/HOW_TO_RUN.md)  
 🔧 **Installing LLVM?** See [docs/LLVM_INSTALLATION_GUIDE.md](docs/LLVM_INSTALLATION_GUIDE.md)  
-📚 **All Documentation:** See [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md)
+⚡ **Quick Commands:** See [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md)
 
 ### 🐳 Docker Quick Start
 
@@ -279,14 +279,10 @@ SPECTRE/
 │   └── README.md                         # Examples guide
 │
 └── 📂 docs/                              # Documentation
-    ├── DOCUMENTATION.md                  # Documentation index
     ├── HOW_TO_RUN.md                     # Usage guide
     ├── LLVM_INSTALLATION_GUIDE.md        # LLVM setup
-    ├── INSTALL_LLVM_WINDOWS.md           # Windows LLVM guide
     ├── GCC_INSTALLATION_GUIDE.md         # GCC setup
-    ├── CPP_SUPPORT.md                    # C++ support details
-    ├── QUICK_REFERENCE.md                # Quick commands
-    └── PRODUCTION_SERVER_UPGRADE.md      # Production deployment
+    └── QUICK_REFERENCE.md                # Quick commands
 ```
 
 ## 🔄 The 8-Phase Workflow
@@ -424,11 +420,8 @@ int main() {
 - **[docs/HOW_TO_RUN.md](docs/HOW_TO_RUN.md)** - Complete usage guide
 - **[docs/LLVM_INSTALLATION_GUIDE.md](docs/LLVM_INSTALLATION_GUIDE.md)** - LLVM setup instructions
 - **[docs/GCC_INSTALLATION_GUIDE.md](docs/GCC_INSTALLATION_GUIDE.md)** - GCC compiler setup
-- **[docs/CPP_SUPPORT.md](docs/CPP_SUPPORT.md)** - C++ language support
 - **[docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md)** - Quick command reference
-- **[docs/PRODUCTION_SERVER_UPGRADE.md](docs/PRODUCTION_SERVER_UPGRADE.md)** - Production deployment
 - **[examples/README.md](examples/README.md)** - Example programs guide
-- **[docs/DOCUMENTATION.md](docs/DOCUMENTATION.md)** - Complete documentation index
 
 ## 🔧 Requirements
 
@@ -555,16 +548,6 @@ See [examples/README.md](examples/README.md) for details.
 - ✅ Corrected all image paths
 - ✅ JavaScript error handling improved
 
-## ✅ SIH 2025 Compliance
-
-**SPECTRE meets all Smart India Hackathon 2025 requirements:**
-- ✅ **Object File Obfuscation** - Direct .o/.obj manipulation
-- ✅ **LLVM IR Transformation** - Intermediate representation obfuscation
-- ✅ **52+ Techniques** - Exceeds minimum requirements
-- ✅ **Comprehensive Reporting** - All metrics tracked
-- ✅ **Production Ready** - Docker, WSGI, enterprise-grade
-- ✅ **Open Source** - Fully documented and accessible
-
 ## 🔮 Roadmap (Already Implemented!)
 
 - ✅ LLVM IR-based transformations
@@ -579,20 +562,13 @@ See [examples/README.md](examples/README.md) for details.
 
 **Repository:** [https://github.com/Priyanshu12116/SPECTRE](https://github.com/Priyanshu12116/SPECTRE)
 
-## 📚 Documentation
+## 📚 Additional Resources
 
 **Core Documentation:**
 - 📖 [Complete Usage Guide](docs/HOW_TO_RUN.md)
 - 🔧 [LLVM Installation](docs/LLVM_INSTALLATION_GUIDE.md)
-- 📚 [All Documentation](docs/DOCUMENTATION.md)
+- 🛠️ [GCC Installation](docs/GCC_INSTALLATION_GUIDE.md)
 - ⚡ [Quick Reference](docs/QUICK_REFERENCE.md)
-- 🚀 [Production Setup](docs/PRODUCTION_SERVER_UPGRADE.md)
-
-**Feature Guides:**
-- 🔐 [Google OAuth Setup](frontend/GOOGLE_AUTH_SETUP.md)
-- 👤 [Profile Page Guide](frontend/PROFILE_PAGE_GUIDE.md)
-- 🐛 [Bug Fixes Summary](BUG_FIXES_SUMMARY.md)
-- 🧹 [Cleanup Summary](CLEANUP_SUMMARY.md)
 
 **Examples:**
 - 💡 [Example Programs](examples/README.md)
