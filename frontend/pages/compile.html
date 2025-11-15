@@ -285,6 +285,13 @@
                     <option value="c">C</option>
                 </select>
             </div>
+            <div class="input-group">
+                <label for="strictMode">
+                    <i data-lucide="shield-alert"></i>
+                    Strict Mode (enforce selected language)
+                </label>
+                <input type="checkbox" id="strictMode">
+            </div>
         </div>
 
         <!-- Compile Button -->
@@ -401,6 +408,7 @@
 
             const languageType = document.getElementById('languageType').value;
             const isCpp = languageType === 'cpp';
+            const strict = document.getElementById('strictMode')?.checked || false;
 
             // Disable button and show loading
             compileBtn.disabled = true;
@@ -448,13 +456,25 @@
                     body: JSON.stringify({
                         llvm_ir: fileContent,
                         password: password,
-                        is_cpp: isCpp
+                        is_cpp: isCpp,
+                        strict: strict
                     })
                 });
 
                 console.log('Response status:', response.status);
 
                 if (response.ok) {
+                    const detected = response.headers.get('X-SPECTRE-Detected-Lang') || '';
+                    const requested = response.headers.get('X-SPECTRE-Requested-Lang') || '';
+                    const autocorrected = response.headers.get('X-SPECTRE-Lang-Autocorrected') === 'true';
+                    let detectionNote = '';
+                    if (detected && requested) {
+                        if (autocorrected) {
+                            detectionNote = `Language auto-corrected: detected ${detected.toUpperCase()} vs requested ${requested.toUpperCase()}. `;
+                        } else {
+                            detectionNote = `Language: ${detected.toUpperCase()} (requested ${requested.toUpperCase()}). `;
+                        }
+                    }
                     // Download the executable
                     const blob = await response.blob();
                     console.log('Executable size:', blob.size, 'bytes');
@@ -468,7 +488,7 @@
                     document.body.removeChild(a);
                     window.URL.revokeObjectURL(url);
 
-                    showStatus('✅ Compilation successful! Executable downloaded.', 'success');
+                    showStatus(`✅ Compilation successful! ${detectionNote}Executable downloaded.`, 'success');
                 } else {
                     const error = await response.json();
                     console.error('Compilation error:', error);

@@ -345,11 +345,23 @@ def obfuscate_with_llvm():
         print(f"INFO: Generated vault password: {vault_password}")
         print(f"DEBUG: Password in report: {report.get('vault_password', 'NOT FOUND')}")
         
-        # Embed password hash in LLVM IR for validation during compilation
         import hashlib
         password_hash = hashlib.sha256(vault_password.encode()).hexdigest()
-        obfuscated_ir_with_hash = f"; SPECTRE_PASSWORD_HASH: {password_hash}\n" + result['obfuscated_ir']
-        print(f"INFO: Embedded password hash in LLVM IR for validation")
+        # Heuristic language detection from source code to embed marker
+        code_lower = code.lower()
+        cpp_indicators = [
+            '#include <iostream>',
+            'using namespace std',
+            'std::',
+            'cout',
+            'cin',
+            'class ',
+            'new ',
+            'delete '
+        ]
+        lang_marker = 'cpp' if any(ind in code_lower for ind in cpp_indicators) else 'c'
+        obfuscated_ir_with_hash = f"; SPECTRE_PASSWORD_HASH: {password_hash}\n; SPECTRE_LANG: {lang_marker}\n" + result['obfuscated_ir']
+        print(f"INFO: Embedded password hash and language marker ({lang_marker}) in LLVM IR")
         
         return jsonify({
             "success": True,
@@ -441,6 +453,56 @@ def compile_llvm_ir():
         llvm_ir = data.get('llvm_ir', '')
         password = data.get('password', '')
         is_cpp = data.get('is_cpp', True)  # Default to C++
+        strict = bool(data.get('strict', False))
+
+        detected_is_cpp = None
+        detection_reason = 'fallback'
+
+        try:
+            # Prefer explicit language marker if present
+            if '; SPECTRE_LANG:' in llvm_ir:
+                for line in llvm_ir.split('\n'):
+                    if line.startswith('; SPECTRE_LANG:'):
+                        value = line.split(':', 1)[1].strip().lower()
+                        detected_is_cpp = (value == 'cpp')
+                        detection_reason = 'marker'
+                        break
+            elif 'DW_LANG_C_plus_plus' in llvm_ir or 'DW_LANG_C_plus_plus_11' in llvm_ir or 'DW_LANG_C_plus_plus_14' in llvm_ir:
+                detected_is_cpp = True
+                detection_reason = 'debug-metadata'
+            elif 'DW_LANG_C' in llvm_ir:
+                detected_is_cpp = False
+                detection_reason = 'debug-metadata'
+            else:
+                if re.search(r'@_Z[\w$]+', llvm_ir):
+                    detected_is_cpp = True
+                    detection_reason = 'mangled-symbols'
+                else:
+                    detected_is_cpp = is_cpp
+                    detection_reason = 'fallback'
+        except Exception:
+            detected_is_cpp = is_cpp
+            detection_reason = 'fallback-error'
+
+        requested_is_cpp = is_cpp
+        lang_mismatch = (detected_is_cpp is not None) and (detected_is_cpp != requested_is_cpp)
+        autocorrected = False
+
+        if lang_mismatch:
+            print(f"INFO: Language mismatch detected (requested={'C++' if requested_is_cpp else 'C'}, detected={'C++' if detected_is_cpp else 'C'} via {detection_reason})")
+            if strict:
+                return jsonify({
+                    "error": "Language selection mismatch",
+                    "details": f"IR appears to be {'C++' if detected_is_cpp else 'C'} but you selected {'C++' if requested_is_cpp else 'C'}",
+                    "type": "LanguageMismatchError"
+                }), 400
+            is_cpp = detected_is_cpp
+            autocorrected = True
+        else:
+            is_cpp = detected_is_cpp if detected_is_cpp is not None else is_cpp
+
+        detected_lang_header = 'cpp' if (detected_is_cpp if detected_is_cpp is not None else is_cpp) else 'c'
+        requested_lang_header = 'cpp' if requested_is_cpp else 'c'
         
         if not llvm_ir:
             return jsonify({"error": "No LLVM IR provided"}), 400
@@ -589,12 +651,17 @@ def compile_llvm_ir():
             
             # Return the executable as a downloadable file
             try:
-                return send_file(
+                resp = send_file(
                     persistent_exe,
                     as_attachment=True,
                     download_name='obfuscated_program.exe',
                     mimetype='application/octet-stream'
                 )
+                resp.headers['X-SPECTRE-Detected-Lang'] = detected_lang_header
+                resp.headers['X-SPECTRE-Requested-Lang'] = requested_lang_header
+                resp.headers['X-SPECTRE-Lang-Autocorrected'] = 'true' if autocorrected else 'false'
+                resp.headers['Access-Control-Expose-Headers'] = 'X-SPECTRE-Detected-Lang, X-SPECTRE-Requested-Lang, X-SPECTRE-Lang-Autocorrected'
+                return resp
             finally:
                 # Clean up temp directory after a delay (let the download start first)
                 # Note: The persistent file will be cleaned up on next compilation
