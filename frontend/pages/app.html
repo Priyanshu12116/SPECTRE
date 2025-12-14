@@ -1,4 +1,5 @@
-<html lang="en">
+<!DOCTYPE html>\n<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,11 +11,12 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
+
 <body>
     <!-- Background Pattern (matching home page) -->
     <canvas id="matrix-bg"></canvas>
 
-    
+
     <!-- Navigation (matching home page) -->
     <nav>
         <div class="nav-container">
@@ -32,9 +34,9 @@
             <div id="nav-auth-container"></div>
         </div>
     </nav>
-    
+
     <div class="app-container">
-        
+
         <!-- Page Title -->
         <div class="page-title-section">
             <h1 class="page-title">
@@ -56,7 +58,8 @@
                     <span class="drop-zone-icon">📤</span>
                     <p>Drag & drop C/C++ files here or click to browse</p>
                     <p class="file-hint">Supported: .c, .cpp, .cc, .cxx, .h, .hpp</p>
-                    <input type="file" id="fileInput" accept=".c,.cpp,.cc,.cxx,.h,.hpp" multiple title="Upload C/C++ source files" aria-label="Upload C/C++ source files">
+                    <input type="file" id="fileInput" accept=".c,.cpp,.cc,.cxx,.h,.hpp" multiple
+                        title="Upload C/C++ source files" aria-label="Upload C/C++ source files">
                 </div>
                 <div id="file-list"></div>
             </div>
@@ -239,7 +242,7 @@
                     <p>Your code analysis report will appear here...</p>
                 </div>
             </div>
-            
+
             <!-- Security Report (Hidden by default) -->
             <div class="card security-report glass-card" id="securityReport" style="display: none;">
                 <h2 class="section-header">
@@ -265,7 +268,7 @@
     <footer class="app-footer">
         <p>&copy; 2025 SPECTRE Obfuscator. All Rights Reserved.</p>
     </footer>
-    
+
     <!-- Scripts -->
     <script src="../js/home.js"></script>
     <script src="../js/script.js"></script>
@@ -273,7 +276,7 @@
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
-        
+
         // Background pattern mouse tracking
         document.addEventListener('mousemove', (e) => {
             const pattern = document.querySelector('.background-pattern');
@@ -288,4 +291,5 @@
         });
     </script>
 </body>
+
 </html>

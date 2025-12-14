@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory, redirect
 from flask_cors import CORS
 import requests
 from datetime import datetime
@@ -11,9 +11,84 @@ from advanced_obfuscator import AdvancedObfuscator
 from llvm_obfuscator import LLVMObfuscator
 from security_analyzer import SecurityAnalyzer
 from code_vault import CodeVault
+# SECURITY: Import security utilities for rate limiting and input validation
+from security_utils import (
+    rate_limit, handle_api_errors,
+    validate_code_input, validate_filename, validate_platform,
+    validate_obfuscation_level, validate_password,
+    ValidationError, safe_error_response
+)
 
-app = Flask(__name__)
+# Get the frontend directory path (relative to backend)
+# Use __file__ to get the correct path regardless of where script is run from
+_BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.dirname(_BACKEND_DIR)
+FRONTEND_DIR = os.path.join(_PROJECT_ROOT, 'frontend')
+ASSETS_DIR = os.path.join(_PROJECT_ROOT, 'assets')
+
+# Debug: Print paths on startup
+print(f"📁 Backend dir: {_BACKEND_DIR}")
+print(f"📁 Frontend dir: {FRONTEND_DIR}")
+print(f"📁 Assets dir: {ASSETS_DIR}")
+print(f"📁 Frontend exists: {os.path.exists(FRONTEND_DIR)}")
+print(f"📁 Assets exists: {os.path.exists(ASSETS_DIR)}")
+
+app = Flask(__name__, static_folder=FRONTEND_DIR)
 CORS(app)
+
+# ============== STATIC FILE SERVING ROUTES ==============
+
+@app.route('/')
+def serve_index():
+    """Serve the landing page"""
+    return send_from_directory(os.path.join(FRONTEND_DIR, 'pages'), 'index.html')
+
+@app.route('/pages/<path:filename>')
+def serve_pages(filename):
+    """Serve HTML pages"""
+    return send_from_directory(os.path.join(FRONTEND_DIR, 'pages'), filename)
+
+@app.route('/css/<path:filename>')
+def serve_css(filename):
+    """Serve CSS files"""
+    return send_from_directory(os.path.join(FRONTEND_DIR, 'css'), filename)
+
+@app.route('/js/<path:filename>')
+def serve_js(filename):
+    """Serve JavaScript files"""
+    return send_from_directory(os.path.join(FRONTEND_DIR, 'js'), filename)
+
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    """Serve asset files (images, etc.)"""
+    return send_from_directory(ASSETS_DIR, filename)
+
+@app.route('/frontend/<path:filename>')
+def serve_frontend_files(filename):
+    """Serve any frontend files for backwards compatibility"""
+    return send_from_directory(FRONTEND_DIR, filename)
+
+# Handle root-level HTML file requests (e.g., /app.html -> /pages/app.html)
+@app.route('/<path:filename>')
+def serve_root_files(filename):
+    """
+    Handle root-level file requests.
+    HTML files are served from pages/, CSS from css/, JS from js/
+    """
+    if filename.endswith('.html'):
+        # Serve HTML files from pages directory
+        return send_from_directory(os.path.join(FRONTEND_DIR, 'pages'), filename)
+    elif filename.endswith('.css'):
+        # Serve CSS files from css directory
+        return send_from_directory(os.path.join(FRONTEND_DIR, 'css'), filename)
+    elif filename.endswith('.js'):
+        # Serve JS files from js directory
+        return send_from_directory(os.path.join(FRONTEND_DIR, 'js'), filename)
+    else:
+        # Try to serve from assets
+        return send_from_directory(ASSETS_DIR, filename)
+
+# ============== END STATIC FILE SERVING ROUTES ==============
 
 # --- IMPORTANT: Set your API key as an environment variable ---
 # For Windows: set HUGGINGFACE_API_KEY=your_key_here
@@ -161,6 +236,8 @@ def review_code():
     return jsonify({"review": review_report})
 
 @app.route("/api/obfuscate", methods=["POST"])
+@rate_limit('obfuscate')
+@handle_api_errors
 def obfuscate_code():
     """Obfuscate code with verification and reporting (Basic version)"""
     try:
@@ -219,6 +296,8 @@ def obfuscate_code():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/obfuscate/advanced", methods=["POST"])
+@rate_limit('obfuscate')
+@handle_api_errors
 def obfuscate_code_advanced():
     """Advanced obfuscation with comprehensive protection layers"""
     try:
@@ -282,6 +361,8 @@ def obfuscate_code_advanced():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/obfuscate/llvm", methods=["POST"])
+@rate_limit('obfuscate')
+@handle_api_errors
 def obfuscate_with_llvm():
     """LLVM-based obfuscation (SIH compliant - object file obfuscation)"""
     try:
@@ -325,25 +406,22 @@ def obfuscate_with_llvm():
         report = obfuscator.generate_report(result, config)
         
         # Generate auto password for Code Vault
-        print("DEBUG: About to generate password...")
+        # SECURITY: Removed debug logging that exposed passwords
         vault = CodeVault()
-        print("DEBUG: CodeVault instance created")
         vault_password = vault.generate_secure_password(length=16)
-        print(f"DEBUG: Password generated: {vault_password}")
         
         # Add password to report (ensure it's mutable)
         if isinstance(report, dict):
             report['vault_password'] = vault_password
             report['password_auto_generated'] = True
             report['password_length'] = len(vault_password)
-            print(f"DEBUG: Password added to report: {report['vault_password']}")
         else:
             print(f"ERROR: Report is not a dict, it's a {type(report)}")
         
         print(f"INFO: LLVM obfuscation complete! Status: {report['status']}")
         print(f"INFO: Object file size: {result['object_size']} bytes")
-        print(f"INFO: Generated vault password: {vault_password}")
-        print(f"DEBUG: Password in report: {report.get('vault_password', 'NOT FOUND')}")
+        # SECURITY: Password logging removed - password delivered via API response only
+
         
         import hashlib
         password_hash = hashlib.sha256(vault_password.encode()).hexdigest()
@@ -523,8 +601,7 @@ def compile_llvm_ir():
         import hashlib
         password_hash = hashlib.sha256(password.encode()).hexdigest()
         
-        print(f"DEBUG: Checking for password hash in LLVM IR...")
-        print(f"DEBUG: User password hash: {password_hash[:16]}...")
+        # SECURITY: Password hash validation (no debug logging)
         
         password_validated = False
         
@@ -533,12 +610,10 @@ def compile_llvm_ir():
             for line in llvm_ir.split('\n'):
                 if line.startswith('; SPECTRE_PASSWORD_HASH:'):
                     embedded_hash = line.split(':', 1)[1].strip()
-                    print(f"DEBUG: Embedded hash found: {embedded_hash[:16]}...")
+
                     
                     if embedded_hash != password_hash:
-                        print(f"ERROR: Invalid password (hash mismatch)")
-                        print(f"ERROR: Expected: {embedded_hash[:16]}...")
-                        print(f"ERROR: Got: {password_hash[:16]}...")
+
                         return jsonify({
                             "error": "Invalid Code Vault password",
                             "details": "The password you entered does not match the password used during obfuscation"

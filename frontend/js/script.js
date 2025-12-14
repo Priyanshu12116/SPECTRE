@@ -4,16 +4,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const username = localStorage.getItem('username');
     const userInfoDiv = document.getElementById('user-info');
     if (username && userInfoDiv) {
-        userInfoDiv.innerHTML = `
-            <span>Welcome, <strong>${username}</strong>!</span>
-            <button id="logoutBtn" class="logout-btn">Logout</button>
-        `;
-        document.getElementById('logoutBtn').addEventListener('click', () => {
+        // SECURITY: Use DOM API instead of innerHTML to prevent XSS
+        userInfoDiv.innerHTML = ''; // Clear first
+
+        const welcomeSpan = document.createElement('span');
+        welcomeSpan.textContent = 'Welcome, ';
+
+        const strongEl = document.createElement('strong');
+        strongEl.textContent = username; // textContent escapes HTML
+        welcomeSpan.appendChild(strongEl);
+        welcomeSpan.appendChild(document.createTextNode('!'));
+
+        const logoutBtn = document.createElement('button');
+        logoutBtn.id = 'logoutBtn';
+        logoutBtn.className = 'logout-btn';
+        logoutBtn.textContent = 'Logout';
+        logoutBtn.addEventListener('click', () => {
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('username');
-            window.location.href = 'index.html'; // Redirect to home page on logout
+            window.location.href = 'index.html';
         });
+
+        userInfoDiv.appendChild(welcomeSpan);
+        userInfoDiv.appendChild(logoutBtn);
     }
+
 
     // --- MATRIX RAIN BACKGROUND ANIMATION (Optional - only if canvas exists) ---
     const canvas = document.getElementById('matrix-bg');
@@ -75,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderFileList() {
-        if(fileList) fileList.innerHTML = '';
+        if (fileList) fileList.innerHTML = '';
         uploadedFiles.forEach(file => {
             const fileItem = document.createElement('div');
             fileItem.className = 'file-item';
@@ -83,21 +98,21 @@ document.addEventListener('DOMContentLoaded', () => {
             fileList.appendChild(fileItem);
         });
     }
-// --- OBFUSCATION LEVEL SELECTOR ---
-const levelBtns = document.querySelectorAll('.level-btn');
-let selectedLevel = 'source'; // Default
+    // --- OBFUSCATION LEVEL SELECTOR ---
+    const levelBtns = document.querySelectorAll('.level-btn');
+    let selectedLevel = 'source'; // Default
 
-levelBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        // Remove active from all
-        levelBtns.forEach(b => b.classList.remove('active'));
-        // Add active to clicked
-        btn.classList.add('active');
-        // Store selected level
-        selectedLevel = btn.dataset.level;
-        addLog(`Selected: ${btn.querySelector('.level-name').textContent}`, 'info');
+    levelBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remove active from all
+            levelBtns.forEach(b => b.classList.remove('active'));
+            // Add active to clicked
+            btn.classList.add('active');
+            // Store selected level
+            selectedLevel = btn.dataset.level;
+            addLog(`Selected: ${btn.querySelector('.level-name').textContent}`, 'info');
+        });
     });
-});
     // --- REAL OBFUSCATION PROCESS CONTROL ---
     if (startBtn) {
         startBtn.addEventListener('click', async () => {
@@ -121,29 +136,29 @@ levelBtns.forEach(btn => {
         startBtn.disabled = true;
         if (cancelBtn) cancelBtn.disabled = false;
         progressBar.style.width = '0%';
-        if(logOutput) logOutput.innerHTML = '';
-        
+        if (logOutput) logOutput.innerHTML = '';
+
         // Declare variables outside try block for error handling
         let file, code, levelName, platform, compiler;
-        
+
         try {
             file = uploadedFiles[0];
             code = await file.text();
-            
+
             // Get obfuscation parameters
             levelName = selectedLevel === 'source' ? 'quick' : selectedLevel === 'intermediate' ? 'balanced' : 'maximum';
             platform = document.getElementById('target-platform')?.value || 'windows';
             compiler = document.getElementById('compiler')?.value || 'llvm';  // Changed to 'let'
-            
+
             // Determine if advanced mode should be used
-            const useAdvanced = levelName === 'maximum'|| 
-                              document.getElementById('code-virtualization')?.checked ||
-                              document.getElementById('control-flow-flattening')?.checked;
-            
+            const useAdvanced = levelName === 'maximum' ||
+                document.getElementById('code-virtualization')?.checked ||
+                document.getElementById('control-flow-flattening')?.checked;
+
             addLog('Starting obfuscation process...', 'info');
             addLog(`Compiler: ${compiler.toUpperCase()} | Platform: ${platform} | Level: ${levelName}`, 'info');
             progressBar.style.width = '10%';
-            
+
             // Check LLVM status - Force LLVM only
             addLog('Checking LLVM toolchain...', 'info');
             try {
@@ -152,13 +167,13 @@ levelBtns.forEach(btn => {
                 if (!status.llvm_available) {
                     addLog('❌ LLVM not available. Please install LLVM/Clang.', 'error');
                     addLog('Obfuscation cannot proceed without LLVM.', 'error');
-                    
+
                     // Save failed attempt to history
                     const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
                         type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
                         message: entry.textContent
                     }));
-                    
+
                     window.saveToHistory(
                         file.name,
                         {
@@ -172,7 +187,7 @@ levelBtns.forEach(btn => {
                         0,
                         null
                     );
-                    
+
                     addLog('📝 Failed attempt saved to history', 'info');
                     finishProcess();
                     return;
@@ -183,13 +198,13 @@ levelBtns.forEach(btn => {
             } catch (e) {
                 addLog('❌ Cannot connect to server. Please ensure server is running.', 'error');
                 addLog(`Error: ${e.message}`, 'error');
-                
+
                 // Save failed attempt to history
                 const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
                     type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
                     message: entry.textContent
                 }));
-                
+
                 window.saveToHistory(
                     file.name,
                     {
@@ -203,18 +218,18 @@ levelBtns.forEach(btn => {
                     0,
                     null
                 );
-                
+
                 addLog('📝 Failed attempt saved to history', 'info');
                 finishProcess();
                 return;
             }
-            
+
             addLog('Creating password-protected code vault...', 'info');
             progressBar.style.width = '20%';
-            
+
             addLog('Running baseline verification...', 'info');
             progressBar.style.width = '30%';
-            
+
             // Force LLVM API endpoint only
             const apiEndpoint = 'http://127.0.0.1:5000/api/obfuscate/llvm';
             const response = await fetch(apiEndpoint, {
@@ -230,29 +245,29 @@ levelBtns.forEach(btn => {
                     create_vault: true  // ✅ Re-enabled - GCC installed!
                 })
             });
-            
+
             progressBar.style.width = '50%';
             addLog('Applying obfuscation transformations...', 'info');
-            
+
             if (!response.ok) {
                 throw new Error(`Server error: ${response.status}`);
             }
-            
+
             const result = await response.json();
-            
+
             // Debug: Log the entire response
             console.log('DEBUG: Full backend response:', result);
             console.log('DEBUG: result.vault_password =', result.vault_password);
             console.log('DEBUG: result.report.vault_password =', result.report?.vault_password);
-            
+
             progressBar.style.width = '70%';
             addLog('Encrypting strings and constants...', 'info');
-            
+
             progressBar.style.width = '85%';
             addLog('Verifying obfuscated code...', 'info');
-            
+
             progressBar.style.width = '100%';
-            
+
             if (result.success) {
                 addLog('✅ Obfuscation complete!', 'success');
                 addLog(`Status: ${result.report.status}`, result.report.status === 'SUCCESS' ? 'success' : 'error');
@@ -275,7 +290,7 @@ levelBtns.forEach(btn => {
                     Math.floor((Date.now() - startTime) / 1000),
                     result.output_file || result.obfuscated_code || null
                 );
-                
+
                 // Show LLVM-specific info if using LLVM
                 if (result.llvm_method) {
                     addLog('🔧 Method: LLVM IR Transformation + Object File Obfuscation', 'success');
@@ -287,7 +302,7 @@ levelBtns.forEach(btn => {
                         addLog(`Executable size: ${result.executable_size} bytes`, 'info');
                     }
                 }
-                
+
                 // Display statistics
                 const stats = result.report.obfuscation_statistics || result.report.statistics;
                 if (stats) {
@@ -311,7 +326,7 @@ levelBtns.forEach(btn => {
                         addLog(`LLVM passes: ${stats.llvm_passes_applied.join(', ')}`, 'info');
                     }
                 }
-                
+
                 // Show advanced stats if available
                 if (stats.variables_renamed) {
                     addLog(`Variables renamed: ${stats.variables_renamed}`, 'info');
@@ -322,12 +337,12 @@ levelBtns.forEach(btn => {
                 if (stats.opaque_predicates) {
                     addLog(`Opaque predicates: ${stats.opaque_predicates}`, 'info');
                 }
-                
+
                 // Show security score if available
                 if (result.report.security_score) {
                     addLog(`🛡️ Security Score: ${result.report.security_score}/100`, 'success');
                 }
-                
+
                 // Show verification status (only for GCC method)
                 if (result.report.verification) {
                     if (result.report.verification.verified) {
@@ -336,13 +351,13 @@ levelBtns.forEach(btn => {
                         addLog(`⚠️ Verification: ${result.report.verification.reason}`, 'error');
                     }
                 }
-                
+
                 // Store obfuscated code and report for download
                 window.obfuscatedCode = result.obfuscated_code || result.obfuscated_ir;
                 window.obfuscationReport = result.report;
                 // Store original filename to preserve extension
                 window.originalFilename = uploadedFiles[0].name;
-                
+
                 // Add vault password to report if available (check both locations)
                 const vaultPassword = result.vault_password || result.report.vault_password;
                 if (vaultPassword) {
@@ -352,27 +367,27 @@ levelBtns.forEach(btn => {
                 } else {
                     console.log('DEBUG: No vault password found in result:', result);
                 }
-                
+
                 // Show download options
                 showObfuscationResults(result);
             } else {
                 addLog('❌ Obfuscation failed', 'error');
             }
-            
+
         } catch (error) {
             addLog(`Error: ${error.message}`, 'error');
             progressBar.style.width = '0%';
-            
+
             // Save failed attempt to history (with fallback values)
             console.log('🔴 Obfuscation failed, attempting to save to history...'); // Debug
             console.log('File:', file, 'Compiler:', compiler, 'Platform:', platform, 'Level:', levelName); // Debug
-            
+
             if (file) {
                 const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
                     type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
                     message: entry.textContent
                 }));
-        
+
                 window.saveToHistory(
                     file.name,
                     {
@@ -394,11 +409,11 @@ levelBtns.forEach(btn => {
             finishProcess();
         }
     }
-    
+
     function showObfuscationResults(result) {
         // Get vault password from result
         const vaultPassword = window.obfuscationReport?.vault_password || result.vault_password || result.report?.vault_password;
-        
+
         // Create download buttons for obfuscated code and report
         const reportActions = document.querySelector('.report-actions');
         if (reportActions) {
@@ -416,7 +431,7 @@ levelBtns.forEach(btn => {
                     </div>
                 `;
             }
-            
+
             reportActions.innerHTML = passwordHTML + `
                 <button onclick="downloadObfuscatedCode()">Download Obfuscated Code</button>
                 <button onclick="downloadReport()">Download Report (JSON)</button>
@@ -424,34 +439,34 @@ levelBtns.forEach(btn => {
             `;
         }
     }
-    
+
     // Global download functions
-    window.downloadObfuscatedCode = function() {
+    window.downloadObfuscatedCode = function () {
         if (!window.obfuscatedCode) {
             alert('No obfuscated code available');
             return;
         }
-        
+
         // Determine if this is LLVM IR or source code
         // Check for LLVM IR markers (including password hash comment)
-        const isLLVMIR = window.obfuscatedCode.includes('; ModuleID') || 
-                         window.obfuscatedCode.includes('target datalayout') ||
-                         window.obfuscatedCode.includes('target triple') ||
-                         window.obfuscatedCode.includes('; SPECTRE_PASSWORD_HASH');
-        
+        const isLLVMIR = window.obfuscatedCode.includes('; ModuleID') ||
+            window.obfuscatedCode.includes('target datalayout') ||
+            window.obfuscatedCode.includes('target triple') ||
+            window.obfuscatedCode.includes('; SPECTRE_PASSWORD_HASH');
+
         console.log('Download check:', {
             isLLVMIR: isLLVMIR,
             startsWithModuleID: window.obfuscatedCode.startsWith('; ModuleID'),
             hasPasswordHash: window.obfuscatedCode.includes('; SPECTRE_PASSWORD_HASH'),
             firstLine: window.obfuscatedCode.split('\n')[0]
         });
-        
+
         // Preserve original file extension (.c, .cpp, .cc, etc.)
         let filename = 'obfuscated_code.c';
         if (window.originalFilename) {
             const ext = window.originalFilename.substring(window.originalFilename.lastIndexOf('.'));
             const baseName = window.originalFilename.substring(0, window.originalFilename.lastIndexOf('.'));
-            
+
             // If LLVM IR, use .ll extension; otherwise use original extension
             if (isLLVMIR) {
                 filename = `${baseName}_obfuscated.ll`;
@@ -464,9 +479,9 @@ levelBtns.forEach(btn => {
             filename = 'obfuscated_code.ll';
             console.log('Using default .ll filename');
         }
-        
+
         console.log('Downloading as:', filename);
-        
+
         const blob = new Blob([window.obfuscatedCode], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -475,8 +490,8 @@ levelBtns.forEach(btn => {
         a.click();
         URL.revokeObjectURL(url);
     };
-    
-    window.downloadReport = function() {
+
+    window.downloadReport = function () {
         if (!window.obfuscationReport) {
             alert('No report available');
             return;
@@ -489,7 +504,7 @@ levelBtns.forEach(btn => {
         a.click();
         URL.revokeObjectURL(url);
     };
-    
+
     // PDF report function is now in pdf-report.js
 
     function finishProcess() {
@@ -537,7 +552,7 @@ levelBtns.forEach(btn => {
                 if (result.success) {
                     displaySecurityReport(result.analysis);
                     addLog(`✅ Security analysis complete! Score: ${result.analysis.score}/100`, 'success');
-                    
+
                     // Save security scan to history
                     const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
                         type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
@@ -559,7 +574,7 @@ levelBtns.forEach(btn => {
                     );
                 } else {
                     addLog(`❌ Security analysis failed: ${result.error}`, 'error');
-                    
+
                     // Save failed security scan to history
                     const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
                         type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
@@ -582,11 +597,11 @@ levelBtns.forEach(btn => {
                 }
             } catch (error) {
                 addLog(`❌ Error: ${error.message}`, 'error');
-                
+
                 // Save failed security scan to history (error case)
                 console.log('🔴 Security scan failed, attempting to save...'); // Debug
                 console.log('File:', file, 'Language:', language); // Debug
-                
+
                 if (file && language) {
                     const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
                         type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
@@ -629,7 +644,7 @@ levelBtns.forEach(btn => {
 
         scoreValue.textContent = analysis.score;
         scoreGrade.textContent = `Grade: ${analysis.grade}`;
-        
+
         // Set color based on grade
         scoreCircle.className = 'score-circle grade-' + analysis.grade.toLowerCase();
 
@@ -662,7 +677,7 @@ levelBtns.forEach(btn => {
         // Display vulnerabilities
         const vulnerabilities = [...analysis.vulnerabilities, ...analysis.warnings];
         let vulnHtml = '<h3>Vulnerabilities & Warnings</h3>';
-        
+
         if (vulnerabilities.length === 0) {
             vulnHtml += '<p style="color: var(--success-color); text-align: center; padding: 2rem;">✅ No vulnerabilities detected! Your code looks secure.</p>';
         } else {
@@ -706,7 +721,7 @@ levelBtns.forEach(btn => {
             addLog('Starting comprehensive code analysis...', 'info');
             reviewReportCard.style.display = 'block';
             reviewOutput.innerHTML = '<p class="log-entry info">[INFO] Analyzing your code...<br>✓ Checking syntax errors<br>✓ Scanning for security vulnerabilities<br>Please wait...</p>';
-            
+
             reviewBtn.disabled = true;
             reviewBtn.textContent = 'Analyzing...';
 
@@ -740,7 +755,7 @@ levelBtns.forEach(btn => {
                 );
             } catch (error) {
                 const message = (error && error.message) ? error.message : 'Unknown error';
-                
+
                 // Show helpful error message
                 reviewOutput.innerHTML = `
                     <div style="padding: 20px; background: rgba(255, 68, 68, 0.1); border-left: 4px solid #ff4444; border-radius: 4px;">
@@ -758,11 +773,11 @@ levelBtns.forEach(btn => {
                     </div>
                 `;
                 addLog(`Code review unavailable. Try Security Scan instead.`, 'error');
-                
+
                 // Save failed code review to history
                 console.log('🔴 Code review failed, attempting to save...'); // Debug
                 console.log('File:', file, 'Language:', language); // Debug
-                
+
                 if (file && language) {
                     const allLogs = Array.from(document.querySelectorAll('#log-output .log-entry')).map(entry => ({
                         type: entry.classList.contains('success') ? 'success' : entry.classList.contains('error') ? 'error' : 'info',
@@ -859,11 +874,11 @@ levelBtns.forEach(btn => {
     modeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const mode = btn.dataset.mode;
-            
+
             // Update active button
             modeBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
+
             // Show/hide options
             if (mode === 'simple') {
                 simpleOptions.style.display = 'block';
@@ -914,11 +929,11 @@ levelBtns.forEach(btn => {
     window.getExpertConfig = getExpertConfig;
 
     // --- HISTORY MANAGEMENT ---
-    window.saveToHistory = function(filename, config, status, logs, duration, outputFile = null) {
+    window.saveToHistory = function (filename, config, status, logs, duration, outputFile = null) {
         const history = JSON.parse(localStorage.getItem('obfuscationHistory') || '[]');
         const username = localStorage.getItem('username') || 'Guest';
         const level = config?.obfuscationLevel || 'source'; // Get level from config
-    
+
         const historyItem = {
             id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
             username: username, // Add username to track per-user history
@@ -931,17 +946,17 @@ levelBtns.forEach(btn => {
             duration: duration,
             outputFile: outputFile
         };
-        
+
         console.log('💾 Saving to history:', historyItem); // Debug
-        
+
         // Add to beginning of array (most recent first)
         history.unshift(historyItem);
-        
+
         // Keep only last 50 entries
         if (history.length > 50) {
             history.pop();
         }
-        
+
         localStorage.setItem('obfuscationHistory', JSON.stringify(history));
         console.log('✅ History saved! Total items:', history.length); // Debug
     };

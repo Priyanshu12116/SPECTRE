@@ -7,6 +7,168 @@
     z-index: 1;
 }
 
+/* Password Warning Banner - Professional Styling */
+.password-warning-banner {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto 30px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(255, 171, 0, 0.1) 0%, rgba(255, 87, 34, 0.1) 100%);
+    border: 1px solid rgba(255, 171, 0, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(255, 171, 0, 0.15);
+    overflow: hidden;
+    animation: bannerSlideDown 0.4s ease-out;
+}
+
+.password-warning-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ffab00, #ff5722, #ffab00);
+    background-size: 200% 100%;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes bannerSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.banner-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 24px;
+}
+
+.banner-content > svg,
+.banner-content > i {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    color: #ffab00;
+    filter: drop-shadow(0 0 8px rgba(255, 171, 0, 0.5));
+}
+
+.banner-text {
+    flex: 1;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.banner-text strong {
+    color: #ffab00;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.banner-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #ffab00 0%, #ff9500 100%);
+    border: none;
+    border-radius: 8px;
+    color: #1a1a2e;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    box-shadow: 0 4px 15px rgba(255, 171, 0, 0.3);
+}
+
+.banner-button:hover {
+    background: linear-gradient(135deg, #ffc107 0%, #ffab00 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 171, 0, 0.4);
+}
+
+.banner-button:active {
+    transform: translateY(0);
+}
+
+.banner-button svg,
+.banner-button i {
+    width: 16px;
+    height: 16px;
+}
+
+.banner-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.banner-close:hover {
+    background: rgba(255, 87, 34, 0.2);
+    border-color: rgba(255, 87, 34, 0.4);
+    color: #ff5722;
+}
+
+.banner-close svg,
+.banner-close i {
+    width: 18px;
+    height: 18px;
+}
+
+/* Banner Responsive Design */
+@media (max-width: 768px) {
+    .banner-content {
+        flex-wrap: wrap;
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .banner-text {
+        flex: 0 0 calc(100% - 50px);
+        font-size: 0.9rem;
+    }
+
+    .banner-button {
+        flex: 1;
+        justify-content: center;
+        padding: 12px 16px;
+    }
+
+    .banner-close {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 28px;
+        height: 28px;
+    }
+}
+
 .profile-content {
     max-width: 1200px;
     margin: 0 auto;

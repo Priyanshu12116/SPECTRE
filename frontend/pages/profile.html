@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <link rel="icon" href="../../assets/images/spectrelogo.jpg" type="image/jpeg">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+
 <body>
     <!-- Background Pattern -->
     <canvas id="matrix-bg"></canvas>
@@ -40,7 +42,8 @@
             <div class="banner-content">
                 <i data-lucide="alert-circle"></i>
                 <div class="banner-text">
-                    <strong>Action Required:</strong> You signed in with Google. Please create a password to secure your account and enable traditional login.
+                    <strong>Action Required:</strong> You signed in with Google. Please create a password to secure your
+                    account and enable traditional login.
                 </div>
                 <button class="banner-button" id="createPasswordBtn">
                     <i data-lucide="lock"></i>
@@ -247,7 +250,8 @@
             <div class="modal-body">
                 <div id="googleUserPasswordInfo" class="info-message" style="display: none;">
                     <i data-lucide="info"></i>
-                    <p>You signed in with Google. Create a password to enable traditional login with email/username and password.</p>
+                    <p>You signed in with Google. Create a password to enable traditional login with email/username and
+                        password.</p>
                 </div>
                 <form id="changePasswordForm">
                     <div class="form-group" id="currentPasswordGroup">
@@ -274,10 +278,13 @@
 
     <!-- Scripts -->
     <script src="../js/home.js"></script>
+    <!-- SECURITY: Crypto utilities for password hashing -->
+    <script src="../js/crypto-utils.js"></script>
     <script src="../js/profile.js"></script>
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
     </script>
 </body>
+
 </html>
